@@ -298,7 +298,7 @@ Este projeto é fornecido como código educativo. Sinta-se livre para estudar e 
 
 ## 👨‍💻 Autor
 
-Desenvolvido como projeto educativo de Python com CustomTkinter.
+Desenvolvido por Caique Crepaldi como projeto educativo de Python com CustomTkinter.
 
 ---
 
