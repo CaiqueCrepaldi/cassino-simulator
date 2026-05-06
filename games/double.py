@@ -38,14 +38,11 @@ class DoubleGame:
     TICK_MS         = 30   # ms per animation frame
     INITIAL_BALANCE = 1_000.00
 
-    def __init__(self, root: ctk.CTkToplevel) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
         self.root = root
+        self.container = container
+        self.back_callback = back_callback
         self.root.title("🎡 Double")
-        self.root.geometry("560x860")
-        self.root.resizable(True, True)
-        self.root.minsize(560, 720)
-        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
-        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
 
         # State
         self.balance: float      = self.INITIAL_BALANCE
@@ -67,16 +64,35 @@ class DoubleGame:
 
         self._build_ui()
 
+    def _go_back(self) -> None:
+        if self.job_id:
+            self.root.after_cancel(self.job_id)
+        self.back_callback()
+
     # ── UI ───────────────────────────────────────────────────
 
     def _build_ui(self) -> None:
-        main = ctk.CTkFrame(self.root, fg_color="#0d0d0d", corner_radius=0)
-        main.pack(fill="both", expand=True)
+        BG = "#0d0d0d"
+        bg = ctk.CTkFrame(self.container, fg_color=BG, corner_radius=0)
+        bg.pack(fill="both", expand=True)
+
+        main = ctk.CTkFrame(bg, fg_color=BG)
+        main.pack(expand=True, fill="y", anchor="center")
+        ctk.CTkFrame(main, width=560, height=1, fg_color=BG).pack()
+
+        ctk.CTkButton(
+            main, text="← Menu",
+            command=self._go_back,
+            width=120, height=28,
+            fg_color="#1a1a1a", hover_color="#2a2a2a",
+            text_color="#888888", corner_radius=6,
+            font=("Arial", 11, "bold"),
+        ).pack(pady=(6, 2), anchor="w", padx=8)
 
         ctk.CTkLabel(
             main, text="🎡  DOUBLE",
             font=("Arial", 30, "bold"), text_color="#FFD700",
-        ).pack(pady=(20, 2))
+        ).pack(pady=(4, 2))
 
         ctk.CTkLabel(
             main, text="Aposte em Preto, Vermelho ou Branco!",
@@ -90,8 +106,9 @@ class DoubleGame:
         self.balance_label.pack(pady=(8, 0))
 
         # Wheel canvas
-        canvas_bg = ctk.CTkFrame(main, fg_color="#1a1a1a", corner_radius=14)
+        canvas_bg = ctk.CTkFrame(main, fg_color="#1a1a1a", corner_radius=14, height=130)
         canvas_bg.pack(padx=20, pady=12, fill="x")
+        canvas_bg.pack_propagate(False)
 
         self.canvas = tk.Canvas(
             canvas_bg,

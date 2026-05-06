@@ -23,17 +23,13 @@ class Blackjack:
     RANKS   = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
     INITIAL_BALANCE = 1_000.00
 
-    # Card face colors
-    RED_SUITS   = {"♥", "♦"}
+    RED_SUITS = {"♥", "♦"}
 
-    def __init__(self, root: ctk.CTkToplevel) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
         self.root = root
+        self.container = container
+        self.back_callback = back_callback
         self.root.title("🃏 Blackjack")
-        self.root.geometry("620x860")
-        self.root.resizable(True, True)
-        self.root.minsize(620, 700)
-        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
-        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
 
         # State
         self.balance: float     = self.INITIAL_BALANCE
@@ -50,16 +46,33 @@ class Blackjack:
 
         self._build_ui()
 
+    def _go_back(self) -> None:
+        self.back_callback()
+
     # ── UI ───────────────────────────────────────────────────
 
     def _build_ui(self) -> None:
-        main = ctk.CTkFrame(self.root, fg_color="#076324", corner_radius=0)
-        main.pack(fill="both", expand=True)
+        BG = "#076324"
+        bg = ctk.CTkFrame(self.container, fg_color=BG, corner_radius=0)
+        bg.pack(fill="both", expand=True)
+
+        main = ctk.CTkFrame(bg, fg_color=BG)
+        main.pack(expand=True, fill="y", anchor="center")
+        ctk.CTkFrame(main, width=580, height=1, fg_color=BG).pack()
+
+        ctk.CTkButton(
+            main, text="← Menu",
+            command=self._go_back,
+            width=120, height=28,
+            fg_color="#044018", hover_color="#055120",
+            text_color="#CCFFCC", corner_radius=6,
+            font=("Arial", 11, "bold"),
+        ).pack(pady=(6, 2), anchor="w", padx=8)
 
         ctk.CTkLabel(
             main, text="🃏  BLACKJACK",
             font=("Arial", 30, "bold"), text_color="#FFD700",
-        ).pack(pady=(18, 2))
+        ).pack(pady=(4, 2))
 
         ctk.CTkLabel(
             main, text="Chegue em 21 sem ultrapassar — mas supere o dealer!",
@@ -109,7 +122,7 @@ class Blackjack:
         self.player_score_label.pack(pady=(0, 8))
 
         # ── Bet row ──────────────────────────────────────────
-        bet_row = ctk.CTkFrame(main, fg_color="#076324")
+        bet_row = ctk.CTkFrame(main, fg_color=BG)
         bet_row.pack(padx=20, pady=10, fill="x")
 
         ctk.CTkLabel(
@@ -135,7 +148,7 @@ class Blackjack:
             ).pack(side="left", padx=2)
 
         # ── Action buttons ───────────────────────────────────
-        action_row = ctk.CTkFrame(main, fg_color="#076324")
+        action_row = ctk.CTkFrame(main, fg_color=BG)
         action_row.pack(padx=20, pady=4, fill="x")
 
         self.deal_button = ctk.CTkButton(
@@ -200,7 +213,6 @@ class Blackjack:
     # ── Card rendering ───────────────────────────────────────
 
     def _card_widget(self, parent, card, hidden: bool = False) -> ctk.CTkFrame:
-        """Create a card widget. If hidden=True renders a face-down card."""
         frame = ctk.CTkFrame(parent, fg_color="#FFFFFF", corner_radius=8, width=58, height=82)
         frame.pack_propagate(False)
         frame.pack(side="left", padx=3)
@@ -220,7 +232,6 @@ class Blackjack:
         return frame
 
     def _render_hands(self, hide_dealer: bool = True) -> None:
-        """Redraw both hands on screen."""
         for widget in self.dealer_cards_frame.winfo_children():
             widget.destroy()
         for widget in self.player_cards_frame.winfo_children():
@@ -327,7 +338,6 @@ class Blackjack:
         self._set_action_buttons(True)
         self._render_hands(hide_dealer=True)
 
-        # Check player blackjack immediately
         if self._is_blackjack(self.player_hand):
             self._resolve(force_reveal=True)
 
@@ -368,7 +378,6 @@ class Blackjack:
             self._resolve(force_reveal=True)
 
     def _dealer_draw(self) -> None:
-        """Dealer draws until reaching 17 or above."""
         while self._hand_value(self.dealer_hand) < 17:
             self.dealer_hand.append(self.deck.pop())
 
@@ -384,7 +393,6 @@ class Blackjack:
         player_bj = self._is_blackjack(self.player_hand)
         dealer_bj = self._is_blackjack(self.dealer_hand)
 
-        # Determine outcome
         if player_val > 21:
             outcome, color, prize = "bust", "#FF4444", 0
         elif dealer_val > 21:
@@ -433,6 +441,8 @@ class Blackjack:
         self.player_hand  = []
         self.dealer_hand  = []
         self.game_active  = False
+        self.rounds       = 0
+        self.wins         = 0
 
         self.balance_label.configure(text=self._balance_text())
         self.result_label.configure(
@@ -451,6 +461,3 @@ class Blackjack:
             widget.destroy()
         for widget in self.player_cards_frame.winfo_children():
             widget.destroy()
-
-        self.rounds = 0
-        self.wins   = 0

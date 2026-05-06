@@ -45,23 +45,18 @@ class Roulette:
         [34, 35, 36],
     ]
 
-    def __init__(self, root: ctk.CTkToplevel) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
         self.root = root
+        self.container = container
+        self.back_callback = back_callback
         self.root.title("🎡 Roleta")
-        self.root.geometry("700x900")
-        self.root.resizable(True, True)
-        self.root.minsize(700, 750)
-        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
-        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
 
         # State
         self.balance: float          = self.INITIAL_BALANCE
         self.bets: dict[str, float]  = {}   # bet_key -> amount
         self.spinning: bool          = False
         self.job_id                  = None
-
-        # Wheel animation
-        self._angle: float = 0.0
+        self._strip_offset: int      = 0
 
         # Stats
         self.rounds: int = 0
@@ -69,16 +64,35 @@ class Roulette:
 
         self._build_ui()
 
+    def _go_back(self) -> None:
+        if self.job_id:
+            self.root.after_cancel(self.job_id)
+        self.back_callback()
+
     # ── UI ───────────────────────────────────────────────────
 
     def _build_ui(self) -> None:
-        main = ctk.CTkFrame(self.root, fg_color="#0a1a0a", corner_radius=0)
-        main.pack(fill="both", expand=True)
+        BG = "#0a1a0a"
+        bg = ctk.CTkFrame(self.container, fg_color=BG, corner_radius=0)
+        bg.pack(fill="both", expand=True)
+
+        main = ctk.CTkFrame(bg, fg_color=BG)
+        main.pack(expand=True, fill="y", anchor="center")
+        ctk.CTkFrame(main, width=580, height=1, fg_color=BG).pack()
+
+        ctk.CTkButton(
+            main, text="← Menu",
+            command=self._go_back,
+            width=120, height=28,
+            fg_color="#0d2a0d", hover_color="#1a3a1a",
+            text_color="#88AA88", corner_radius=6,
+            font=("Arial", 11, "bold"),
+        ).pack(pady=(6, 2), anchor="w", padx=8)
 
         ctk.CTkLabel(
             main, text="🎡  ROLETA EUROPEIA",
             font=("Arial", 28, "bold"), text_color="#FFD700",
-        ).pack(pady=(14, 2))
+        ).pack(pady=(8, 2))
 
         ctk.CTkLabel(
             main, text="37 números (0–36) | Aposte em quantas opções quiser!",
@@ -92,21 +106,16 @@ class Roulette:
         self.balance_label.pack(pady=(4, 0))
 
         # ── Wheel canvas ─────────────────────────────────────
-        wheel_frame = ctk.CTkFrame(main, fg_color="#111111", corner_radius=12)
+        wheel_frame = ctk.CTkFrame(main, fg_color="#111111", corner_radius=12, height=110)
         wheel_frame.pack(padx=20, pady=8, fill="x")
+        wheel_frame.pack_propagate(False)
 
         self.canvas = tk.Canvas(
-            wheel_frame, width=640, height=90,
+            wheel_frame, height=90,
             bg="#111111", highlightthickness=0,
         )
-        self.canvas.pack(pady=8, padx=8)
-        self._draw_strip(0)
-
-        # Golden pointer
-        self.canvas.create_polygon(
-            320, 4, 313, 16, 327, 16,
-            fill="#FFD700", outline="#FFD700",
-        )
+        self.canvas.pack(pady=8, padx=8, fill="x")
+        self.canvas.bind("<Configure>", self._on_canvas_resize)
 
         # Result display
         self.result_circle = ctk.CTkLabel(
@@ -117,7 +126,7 @@ class Roulette:
         self.result_circle.pack(pady=(0, 8))
 
         # ── Bet amount ───────────────────────────────────────
-        bet_row = ctk.CTkFrame(main, fg_color="#0a1a0a")
+        bet_row = ctk.CTkFrame(main, fg_color=BG)
         bet_row.pack(padx=20, pady=4, fill="x")
 
         ctk.CTkLabel(
@@ -143,17 +152,17 @@ class Roulette:
             ).pack(side="left", padx=2)
 
         # ── Outside bets ─────────────────────────────────────
-        outside_frame = ctk.CTkFrame(main, fg_color="#0a1a0a")
+        outside_frame = ctk.CTkFrame(main, fg_color=BG)
         outside_frame.pack(padx=20, pady=4, fill="x")
 
-        row1 = ctk.CTkFrame(outside_frame, fg_color="#0a1a0a")
+        row1 = ctk.CTkFrame(outside_frame, fg_color=BG)
         row1.pack(fill="x", pady=2)
 
         self._outside_btn(row1, "🔴 Vermelho (2×)", "red",   "#CC0000", "#990000")
         self._outside_btn(row1, "⚫ Preto (2×)",    "black", "#222222", "#333333")
         self._outside_btn(row1, "🟢 Zero (35×)",    "0",     "#006600", "#004400")
 
-        row2 = ctk.CTkFrame(outside_frame, fg_color="#0a1a0a")
+        row2 = ctk.CTkFrame(outside_frame, fg_color=BG)
         row2.pack(fill="x", pady=2)
 
         self._outside_btn(row2, "Par (2×)",       "even", "#1a3a1a", "#2a4a2a")
@@ -161,7 +170,7 @@ class Roulette:
         self._outside_btn(row2, "1–18 (2×)",      "low",  "#1a1a3a", "#2a2a4a")
         self._outside_btn(row2, "19–36 (2×)",     "high", "#1a1a3a", "#2a2a4a")
 
-        row3 = ctk.CTkFrame(outside_frame, fg_color="#0a1a0a")
+        row3 = ctk.CTkFrame(outside_frame, fg_color=BG)
         row3.pack(fill="x", pady=2)
 
         self._outside_btn(row3, "1ª Dúzia (3×)",  "dozen1", "#3a1a1a", "#4a2a2a")
@@ -190,7 +199,7 @@ class Roulette:
 
         self.bets_label = ctk.CTkLabel(
             bets_frame, text="Nenhuma aposta ainda.",
-            font=("Arial", 11), text_color="#888888", wraplength=620,
+            font=("Arial", 11), text_color="#888888", wraplength=540,
         )
         self.bets_label.pack(padx=8, pady=(2, 8))
 
@@ -217,7 +226,7 @@ class Roulette:
         self.result_label = ctk.CTkLabel(
             self.result_frame,
             text="Coloque suas apostas e gire a roleta!",
-            font=("Arial", 13, "bold"), text_color="#CCCCCC", wraplength=640,
+            font=("Arial", 13, "bold"), text_color="#CCCCCC", wraplength=540,
         )
         self.result_label.pack(pady=12, padx=16)
 
@@ -239,6 +248,10 @@ class Roulette:
 
     # ── Wheel strip ──────────────────────────────────────────
 
+    def _on_canvas_resize(self, event) -> None:
+        self._strip_w = max(event.width, 100)
+        self._draw_strip(self._strip_offset)
+
     def _num_color(self, n: int) -> str:
         if n == 0:      return "#006600"
         if n in self.RED_NUMBERS: return "#CC0000"
@@ -247,10 +260,11 @@ class Roulette:
     def _draw_strip(self, offset: int) -> None:
         """Render a scrolling strip of roulette numbers centred on offset."""
         self.canvas.delete("strip")
+        w       = getattr(self, "_strip_w", 540)
         numbers = [0] + list(range(1, 37))   # 37 pockets
         total   = len(numbers)
-        seg_w   = 640 // 14
-        # centre column index = 7 → shows numbers[(offset) % total]
+        seg_w   = w // 14
+        mid     = w // 2
 
         for i in range(16):
             idx = (offset - 7 + i) % total
@@ -267,7 +281,13 @@ class Roulette:
                 fill="#FFFFFF", tags="strip",
             )
 
-        mid = 320
+        # Golden pointer at top-centre
+        self.canvas.create_polygon(
+            mid, 4, mid - 8, 16, mid + 8, 16,
+            fill="#FFD700", outline="#FFD700", tags="strip",
+        )
+
+        # Golden border on the central segment
         self.canvas.create_rectangle(
             mid - seg_w // 2, 18, mid + seg_w // 2, 84,
             outline="#FFD700", width=3, tags="strip",
@@ -474,11 +494,11 @@ class Roulette:
             self.root.after_cancel(self.job_id)
             self.job_id = None
 
-        self.balance  = self.INITIAL_BALANCE
-        self.bets     = {}
-        self.spinning = False
-        self.rounds   = 0
-        self.wins     = 0
+        self.balance       = self.INITIAL_BALANCE
+        self.bets          = {}
+        self.spinning      = False
+        self.rounds        = 0
+        self.wins          = 0
         self._strip_offset = 0
 
         self.balance_label.configure(text=self._balance_text())

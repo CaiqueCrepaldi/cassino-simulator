@@ -24,42 +24,59 @@ class SlotMachine:
     MULTIPLIERS = {"🔥": 2, "⭐": 2, "🤑": 3}
     INITIAL_BALANCE = 1_000.00
 
-    def __init__(self, root: ctk.CTkToplevel) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
         self.root = root
+        self.container = container
+        self.back_callback = back_callback
         self.root.title("🎰 Slot Machine")
-        self.root.geometry("600x1150")
-        self.root.resizable(True, True)
-        self.root.minsize(600, 800)
-        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
-        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
 
         # State
         self.balance: float = self.INITIAL_BALANCE
         self.current_bet: float = 0.0
         self.attempts: int = 0
         self.wins: int = 0
+        self.spin_job = None
 
         self._build_ui()
+
+    def _go_back(self) -> None:
+        if self.spin_job:
+            self.root.after_cancel(self.spin_job)
+        self.back_callback()
 
     # ── UI ───────────────────────────────────────────────────
 
     def _build_ui(self) -> None:
-        main = ctk.CTkFrame(self.root, corner_radius=10, fg_color="#000000")
-        main.pack(padx=20, pady=20, fill="both", expand=True)
+        BG = "#000000"
+        bg = ctk.CTkFrame(self.container, fg_color=BG, corner_radius=0)
+        bg.pack(fill="both", expand=True)
+
+        main = ctk.CTkFrame(bg, fg_color=BG, corner_radius=10)
+        main.pack(expand=True, fill="y", anchor="center")
+        ctk.CTkFrame(main, width=540, height=1, fg_color=BG).pack()
+
+        ctk.CTkButton(
+            main, text="← Menu",
+            command=self._go_back,
+            width=120, height=28,
+            fg_color="#1a1a1a", hover_color="#2a2a2a",
+            text_color="#888888", corner_radius=6,
+            font=("Arial", 11, "bold"),
+        ).pack(pady=(6, 2), anchor="w", padx=8)
 
         ctk.CTkLabel(
             main,
             text="🎰 CASSINO SIMULATOR 🎰",
             font=("Arial", 28, "bold"),
             text_color="#FFFFFF",
-        ).pack(pady=20)
+        ).pack(pady=12)
 
         ctk.CTkLabel(
             main,
             text="Tente conseguir 3 símbolos iguais!",
             font=("Arial", 14),
             text_color="#CCCCCC",
-        ).pack(pady=(0, 30))
+        ).pack(pady=(0, 16))
 
         # Balance
         bank_frame = ctk.CTkFrame(main, fg_color="#1a1a1a", corner_radius=10)
@@ -144,7 +161,7 @@ class SlotMachine:
 
         # Result
         self.result_frame = ctk.CTkFrame(main, corner_radius=10, fg_color="#1a1a1a")
-        self.result_frame.pack(padx=30, pady=20, fill="both", expand=True)
+        self.result_frame.pack(padx=30, pady=10, fill="x")
 
         self.result_label = ctk.CTkLabel(
             self.result_frame,
@@ -153,7 +170,7 @@ class SlotMachine:
             wraplength=400,
             text_color="#FFFFFF",
         )
-        self.result_label.pack(padx=20, pady=30)
+        self.result_label.pack(padx=20, pady=20)
 
         # Stats
         stats_frame = ctk.CTkFrame(main, fg_color="#000000")
@@ -177,7 +194,6 @@ class SlotMachine:
         return f"Tentativas: {self.attempts} | Vitórias: {self.wins} | Taxa de Sucesso: {rate:.2f}%"
 
     def _validate_bet(self) -> bool:
-        """Validates the bet entry. Shows error dialogs on failure."""
         text = self.bet_entry.get().strip()
         if not text:
             messagebox.showerror("Erro", "Digite um valor de aposta!")
@@ -201,7 +217,6 @@ class SlotMachine:
     # ── Game logic ───────────────────────────────────────────
 
     def spin(self) -> None:
-        """Validate bet, animate slots, then show result."""
         if self.spin_button.cget("state") == "disabled":
             return
         if not self._validate_bet():
@@ -209,10 +224,9 @@ class SlotMachine:
 
         self.spin_button.configure(state="disabled", text="🎰 GIRANDO... 🎰")
         self._animate()
-        self.root.after(1500, self._show_result)
+        self.spin_job = self.root.after(1500, self._show_result)
 
     def _animate(self) -> None:
-        """Quick shuffle animation while the result is being calculated."""
         animation_symbols = ["🔥", "⭐", "🤑", "🎰", "💎", "🎲", "🎯", "🎪"]
         for _ in range(10):
             for label in self.slot_labels:
@@ -221,7 +235,7 @@ class SlotMachine:
             time.sleep(0.1)
 
     def _show_result(self) -> None:
-        """Calculate final result, update balance and UI."""
+        self.spin_job = None
         result = [
             random.choices(self.SYMBOLS, weights=self.WEIGHTS, k=1)[0]
             for _ in range(3)
@@ -278,7 +292,10 @@ class SlotMachine:
             self.spin_button.configure(state="disabled", text="💀 GAME OVER 💀")
 
     def reset(self) -> None:
-        """Reset balance and all statistics to initial state."""
+        if self.spin_job:
+            self.root.after_cancel(self.spin_job)
+            self.spin_job = None
+
         self.balance = self.INITIAL_BALANCE
         self.current_bet = 0.0
         self.attempts = 0

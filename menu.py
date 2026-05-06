@@ -1,15 +1,9 @@
 import customtkinter as ctk
-from games.slot_machine import SlotMachine
-from games.aviator import AviatorGame
-from games.double import DoubleGame
-from games.crash_dice import CrashDice
-from games.blackjack import Blackjack
-from games.roulette import Roulette
-from games.coin_flip import CoinFlip
+from typing import Callable
 
 
 class MenuPrincipal:
-    """Main menu screen — lets the player choose which game to open."""
+    """Main menu — single-window navigation via callback."""
 
     GAMES = [
         {
@@ -17,65 +11,66 @@ class MenuPrincipal:
             "subtitle": "Gire os slots e tente 3 símbolos iguais!",
             "fg":       "#CC0000",
             "hover":    "#990000",
-            "handler":  "open_slots",
+            "key":      "slot",
         },
         {
             "text":     "✈️  AVIATOR",
             "subtitle": "Aposte e retire antes do avião voar embora!",
             "fg":       "#0055CC",
             "hover":    "#003D99",
-            "handler":  "open_aviator",
+            "key":      "aviator",
         },
         {
             "text":     "🎡  DOUBLE",
             "subtitle": "Aposte em Preto (2×), Vermelho (2×) ou Branco (14×)!",
             "fg":       "#6600CC",
             "hover":    "#4a0099",
-            "handler":  "open_double",
+            "key":      "double",
         },
         {
             "text":     "🎲  CRASH DICE",
             "subtitle": "Escolha números e role 2 dados — combos especiais pagam mais!",
             "fg":       "#FF8800",
             "hover":    "#CC6600",
-            "handler":  "open_crash_dice",
+            "key":      "crash_dice",
         },
         {
             "text":     "🃏  BLACKJACK",
             "subtitle": "Chegue em 21 sem ultrapassar e supere o dealer!",
             "fg":       "#006622",
             "hover":    "#004416",
-            "handler":  "open_blackjack",
+            "key":      "blackjack",
         },
         {
             "text":     "🎡  ROLETA",
             "subtitle": "Aposte em números, cores e dezenas — até 35× de retorno!",
             "fg":       "#880044",
             "hover":    "#660033",
-            "handler":  "open_roulette",
+            "key":      "roulette",
         },
         {
             "text":     "🪙  COIN FLIP",
             "subtitle": "Cara ou Coroa? 50/50 — com modo auto flip e streak tracker!",
             "fg":       "#555500",
             "hover":    "#777700",
-            "handler":  "open_coin_flip",
+            "key":      "coin_flip",
         },
     ]
 
-    def __init__(self, root: ctk.CTk) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, show_game: Callable) -> None:
         self.root = root
+        self.container = container
+        self.show_game = show_game
         self.root.title("🎰 Cassino Simulator – Menu Principal")
-        self.root.geometry("520x920")
-        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
-        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
         self._build_ui()
 
-    # ── UI ───────────────────────────────────────────────────
-
     def _build_ui(self) -> None:
-        main = ctk.CTkFrame(self.root, corner_radius=10, fg_color="#000000")
-        main.pack(padx=20, pady=20, fill="both", expand=True)
+        bg = ctk.CTkFrame(self.container, fg_color="#000000", corner_radius=0)
+        bg.pack(fill="both", expand=True)
+
+        main = ctk.CTkFrame(bg, fg_color="#000000", corner_radius=10)
+        main.pack(expand=True, fill="y", anchor="center")
+        ctk.CTkFrame(main, width=460, height=1, fg_color="#000000").pack()
 
         ctk.CTkLabel(
             main,
@@ -95,7 +90,7 @@ class MenuPrincipal:
             ctk.CTkButton(
                 main,
                 text=game["text"],
-                command=getattr(self, game["handler"]),
+                command=lambda k=game["key"]: self.show_game(k),
                 font=("Arial", 17, "bold"),
                 corner_radius=10,
                 height=52,
@@ -116,18 +111,4 @@ class MenuPrincipal:
             text="Projeto acadêmico – sem dinheiro real envolvido",
             font=("Arial", 10),
             text_color="#444444",
-        ).pack(side="bottom", pady=12)
-
-    # ── Navigation ───────────────────────────────────────────
-
-    def _new_window(self, game_class, *args, **kwargs) -> None:
-        window = ctk.CTkToplevel(self.root)
-        game_class(window, *args, **kwargs)
-
-    def open_slots(self)      -> None: self._new_window(SlotMachine)
-    def open_aviator(self)    -> None: self._new_window(AviatorGame)
-    def open_double(self)     -> None: self._new_window(DoubleGame)
-    def open_crash_dice(self) -> None: self._new_window(CrashDice)
-    def open_blackjack(self)  -> None: self._new_window(Blackjack)
-    def open_roulette(self)   -> None: self._new_window(Roulette)
-    def open_coin_flip(self)  -> None: self._new_window(CoinFlip)
+        ).pack(pady=12)

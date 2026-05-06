@@ -27,17 +27,14 @@ class AviatorGame:
     TICK_MS    = 100    # ms between multiplier updates
     GROWTH     = 0.05   # multiplier increment factor per tick
     CANVAS_W   = 540
-    CANVAS_H   = 280
+    CANVAS_H   = 260
     INITIAL_BALANCE = 1_000.00
 
-    def __init__(self, root: ctk.CTkToplevel) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
         self.root = root
+        self.container = container
+        self.back_callback = back_callback
         self.root.title("✈️ Aviator")
-        self.root.geometry("580x820")
-        self.root.resizable(True, True)
-        self.root.minsize(580, 720)
-        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
-        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
 
         # State
         self.balance: float     = self.INITIAL_BALANCE
@@ -55,27 +52,46 @@ class AviatorGame:
         self.auto_cashout_mult: float    = 0.0
 
         # Stats
-        self.rounds: int     = 0
-        self.wins: int       = 0
+        self.rounds: int      = 0
+        self.wins: int        = 0
         self.best_mult: float = 0.0
 
         self._build_ui()
 
+    def _go_back(self) -> None:
+        if self.job_id:
+            self.root.after_cancel(self.job_id)
+        self.back_callback()
+
     # ── UI ───────────────────────────────────────────────────
 
     def _build_ui(self) -> None:
-        main = ctk.CTkFrame(self.root, fg_color="#000000", corner_radius=0)
-        main.pack(fill="both", expand=True)
+        BG = "#000000"
+        bg = ctk.CTkFrame(self.container, fg_color=BG, corner_radius=0)
+        bg.pack(fill="both", expand=True)
+
+        main = ctk.CTkFrame(bg, fg_color=BG)
+        main.pack(expand=True, fill="y", anchor="center")
+        ctk.CTkFrame(main, width=560, height=1, fg_color=BG).pack()
+
+        ctk.CTkButton(
+            main, text="← Menu",
+            command=self._go_back,
+            width=120, height=28,
+            fg_color="#1a1a1a", hover_color="#2a2a2a",
+            text_color="#888888", corner_radius=6,
+            font=("Arial", 11, "bold"),
+        ).pack(pady=(6, 2), anchor="w", padx=8)
 
         ctk.CTkLabel(
             main, text="✈️  AVIATOR",
             font=("Arial", 30, "bold"), text_color="#FFFFFF",
-        ).pack(pady=(20, 2))
+        ).pack(pady=(4, 2))
 
         ctk.CTkLabel(
             main, text="Retire antes do avião voar embora!",
             font=("Arial", 12), text_color="#AAAAAA",
-        ).pack(pady=(0, 10))
+        ).pack(pady=(0, 6))
 
         self.balance_label = ctk.CTkLabel(
             main, text=self._balance_text(),
@@ -83,9 +99,10 @@ class AviatorGame:
         )
         self.balance_label.pack()
 
-        # Canvas
-        canvas_frame = ctk.CTkFrame(main, fg_color="#0a0a1a", corner_radius=12)
+        # Canvas — fixed height, fills width
+        canvas_frame = ctk.CTkFrame(main, fg_color="#0a0a1a", corner_radius=12, height=self.CANVAS_H + 10)
         canvas_frame.pack(padx=20, pady=12, fill="x")
+        canvas_frame.pack_propagate(False)
 
         self.canvas = tk.Canvas(
             canvas_frame,
@@ -152,7 +169,7 @@ class AviatorGame:
         self.auto_status.pack(side="left", padx=6)
 
         # Bet row
-        bet_row = ctk.CTkFrame(main, fg_color="#000000")
+        bet_row = ctk.CTkFrame(main, fg_color=BG)
         bet_row.pack(padx=20, pady=4, fill="x")
 
         ctk.CTkLabel(
@@ -178,7 +195,7 @@ class AviatorGame:
             ).pack(side="left", padx=2)
 
         # Action buttons
-        btn_row = ctk.CTkFrame(main, fg_color="#000000")
+        btn_row = ctk.CTkFrame(main, fg_color=BG)
         btn_row.pack(padx=20, pady=10, fill="x")
 
         self.bet_button = ctk.CTkButton(
@@ -207,7 +224,7 @@ class AviatorGame:
 
         self.status_label = ctk.CTkLabel(
             main, text="Defina sua aposta e clique em APOSTAR!",
-            font=("Arial", 14, "bold"), text_color="#CCCCCC", wraplength=500,
+            font=("Arial", 14, "bold"), text_color="#CCCCCC", wraplength=520,
         )
         self.status_label.pack(pady=8, padx=20)
 
@@ -289,7 +306,6 @@ class AviatorGame:
         return "#00FF88"
 
     def _generate_crash(self) -> float:
-        """Exponential distribution — same formula as real Aviator."""
         u = random.random()
         return round(min(0.99 / (1.0 - u * 0.99), 100.0), 2)
 
