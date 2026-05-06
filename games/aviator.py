@@ -47,6 +47,10 @@ class AviatorGame:
         self.history: list[float]        = []
         self.trail: list[tuple[int,int]] = []
 
+        # Auto cash out
+        self.auto_cashout_enabled: bool  = False
+        self.auto_cashout_mult: float    = 0.0
+
         # Stats
         self.rounds: int     = 0
         self.wins: int       = 0
@@ -115,6 +119,38 @@ class AviatorGame:
             font=("Arial", 11, "bold"), text_color="#FFD700",
         )
         self.history_label.pack(side="left", padx=4, pady=6)
+
+        # Auto cash out row
+        auto_row = ctk.CTkFrame(main, fg_color="#0d1a0d", corner_radius=8)
+        auto_row.pack(padx=20, pady=(4, 0), fill="x")
+
+        ctk.CTkLabel(
+            auto_row, text="⚡ Saque Automático:",
+            font=("Arial", 13, "bold"), text_color="#00CC66",
+        ).pack(side="left", padx=8, pady=8)
+
+        self.auto_entry = ctk.CTkEntry(
+            auto_row, placeholder_text="Ex: 2.00x",
+            font=("Arial", 13), corner_radius=8,
+            fg_color="#1a1a1a", border_color="#00AA44",
+            text_color="#FFFFFF", width=110,
+        )
+        self.auto_entry.pack(side="left", padx=6, pady=8)
+
+        self.auto_toggle = ctk.CTkButton(
+            auto_row, text="OFF",
+            command=self._toggle_auto_cashout,
+            font=("Arial", 13, "bold"), width=70, height=32,
+            corner_radius=8,
+            fg_color="#333333", hover_color="#444444", text_color="#888888",
+        )
+        self.auto_toggle.pack(side="left", padx=6, pady=8)
+
+        self.auto_status = ctk.CTkLabel(
+            auto_row, text="Desativado",
+            font=("Arial", 11), text_color="#555555",
+        )
+        self.auto_status.pack(side="left", padx=6)
 
         # Bet row
         bet_row = ctk.CTkFrame(main, fg_color="#000000")
@@ -191,6 +227,34 @@ class AviatorGame:
         best = f"{self.best_mult:.2f}x" if self.best_mult > 0 else "—"
         return f"Rodadas: {self.rounds} | Vitórias: {self.wins} | Maior multiplicador: {best}"
 
+    def _toggle_auto_cashout(self) -> None:
+        if self.auto_cashout_enabled:
+            self.auto_cashout_enabled = False
+            self.auto_toggle.configure(
+                text="OFF", fg_color="#333333",
+                hover_color="#444444", text_color="#888888",
+            )
+            self.auto_status.configure(text="Desativado", text_color="#555555")
+        else:
+            raw = self.auto_entry.get().strip()
+            try:
+                value = float(raw)
+                if value <= 1.0:
+                    messagebox.showerror("Erro", "O multiplicador de saque automático deve ser maior que 1.00x!")
+                    return
+            except ValueError:
+                messagebox.showerror("Erro", "Digite um multiplicador válido (Ex: 2.00)")
+                return
+            self.auto_cashout_mult    = value
+            self.auto_cashout_enabled = True
+            self.auto_toggle.configure(
+                text="ON", fg_color="#007733",
+                hover_color="#005522", text_color="#FFFFFF",
+            )
+            self.auto_status.configure(
+                text=f"Saque em {value:.2f}x", text_color="#00FF88",
+            )
+
     def _add_bet(self, value: int) -> None:
         current = self.bet_entry.get().strip()
         try:
@@ -265,6 +329,8 @@ class AviatorGame:
         self.bet_button.configure(state="disabled")
         self.cash_button.configure(state="normal")
         self.bet_entry.configure(state="disabled")
+        self.auto_entry.configure(state="disabled")
+        self.auto_toggle.configure(state="disabled")
         self.status_label.configure(
             text=f"✈️ Voando... Aposta: R$ {self.current_bet:.2f}",
             text_color="#FFFFFF",
@@ -304,6 +370,9 @@ class AviatorGame:
             text_color=color,
         )
 
+        if self.auto_cashout_enabled and not self.cashed_out and self.multiplier >= self.auto_cashout_mult:
+            self.cash_out()
+
         if self.multiplier >= self.crash_at:
             self._crash()
         else:
@@ -324,6 +393,8 @@ class AviatorGame:
         self.cash_button.configure(state="disabled")
         self.bet_button.configure(state="normal")
         self.bet_entry.configure(state="normal")
+        self.auto_entry.configure(state="normal")
+        self.auto_toggle.configure(state="normal")
 
         if not self.cashed_out:
             self.status_label.configure(
@@ -373,6 +444,9 @@ class AviatorGame:
         self.best_mult   = 0.0
         self.history     = []
 
+        self.auto_cashout_enabled = False
+        self.auto_cashout_mult    = 0.0
+
         self.balance_label.configure(text=self._balance_text())
         self.status_label.configure(
             text="Defina sua aposta e clique em APOSTAR!", text_color="#CCCCCC"
@@ -383,4 +457,11 @@ class AviatorGame:
         self.cash_button.configure(state="disabled")
         self.bet_entry.configure(state="normal")
         self.bet_entry.delete(0, "end")
+        self.auto_entry.configure(state="normal")
+        self.auto_entry.delete(0, "end")
+        self.auto_toggle.configure(
+            text="OFF", fg_color="#333333",
+            hover_color="#444444", text_color="#888888", state="normal",
+        )
+        self.auto_status.configure(text="Desativado", text_color="#555555")
         self._clear_canvas()
