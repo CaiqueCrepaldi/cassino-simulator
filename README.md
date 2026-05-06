@@ -1,17 +1,17 @@
-# 🎰 Cassino Simulator - Simulador de Jogos de Cassino
+# 🎰 Cassino Simulator
 
-Um simulador educativo de cassino desenvolvido em Python com interface gráfica moderna usando **CustomTkinter**. O projeto implementa dois jogos com sistema realista de apostas e banca virtual, sem envolver dinheiro real.
+Um simulador educativo de cassino desenvolvido em Python com interface gráfica moderna usando **CustomTkinter**. O projeto conta com **8 jogos** completos, navegação em janela única e **banca compartilhada** entre todos os jogos, sem envolver dinheiro real.
 
 ---
 
 ## 📋 Índice
 
 - [Características](#características)
+- [Jogos Disponíveis](#jogos-disponíveis)
 - [Requisitos](#requisitos)
 - [Instalação](#instalação)
 - [Como Executar](#como-executar)
-- [Jogos Disponíveis](#jogos-disponíveis)
-- [Instruções de Uso](#instruções-de-uso)
+- [Banca Global](#banca-global)
 - [Mecânica dos Jogos](#mecânica-dos-jogos)
 - [Estrutura do Código](#estrutura-do-código)
 - [Tecnologias Utilizadas](#tecnologias-utilizadas)
@@ -20,22 +20,36 @@ Um simulador educativo de cassino desenvolvido em Python com interface gráfica 
 
 ## ✨ Características
 
-- 🏠 **Menu Principal**: Tela de seleção com acesso aos três jogos
-- 🎰 **Slot Machine**: Jogue nos caça-níqueis com 3 símbolos e animação de giro
-- ✈️ **Aviator**: Aposte e retire antes do avião voar embora — mecânica idêntica ao jogo real
-- 🎡 **Double**: Roda com 14 segmentos (Preto, Vermelho e Branco) — igual ao Double real
-- 💰 **Sistema de Banca Virtual**: R$ 1.000,00 iniciais por jogo, sem dinheiro real envolvido
-- 📊 **Probabilidades Realistas**: Distribuição exponencial no Aviator, pesos ponderados no Slot, 14 segmentos reais no Double
-- 🎪 **Animações em Tempo Real**: Canvas animado no Aviator; roda giratória com desaceleração no Double; animação de giro no Slot
-- 📈 **Estatísticas em Tempo Real**: Tentativas, vitórias, taxa de sucesso e maior multiplicador
-- 🔄 **Reinício Independente**: Cada jogo pode ser resetado sem afetar o outro
+- 🏠 **Menu Principal** com exibição da banca e botão de reset
+- 🎰 **8 jogos** com mecânicas distintas e probabilidades realistas
+- 💰 **Banca global compartilhada** — saldo único que persiste entre todos os jogos
+- 🖼️ **Janela única** — navegação fluida sem abrir múltiplas janelas
+- 📊 **Estatísticas em tempo real** em cada jogo (rodadas, vitórias, taxa)
+- 🎪 **Animações** em canvas e labels em todos os jogos
+- 🔄 **Reset por jogo** — cada jogo tem seu próprio botão "Novo Jogo"
+- 📦 **Executável Windows** disponível (`dist/CassinoSimulator.exe`)
+
+---
+
+## 🎮 Jogos Disponíveis
+
+| # | Jogo | Descrição curta |
+|---|------|-----------------|
+| 1 | 🎰 Slot Machine | Gire 3 slots e tente 3 símbolos iguais |
+| 2 | ✈️ Aviator | Retire antes do avião crashar para embolsar o multiplicador |
+| 3 | 🎡 Double | Roda com 14 segmentos — Preto (2×), Vermelho (2×), Branco (14×) |
+| 4 | 🎲 Crash Dice | Escolha até 3 números e role 2 dados — dupla, soma ou face |
+| 5 | 🎠 Roleta | Roleta europeia com 37 números e múltiplos tipos de aposta |
+| 6 | 🪙 Coin Flip | Cara ou coroa — simples e direto |
+| 7 | 🃏 Blackjack | 21 contra o dealer com Hit, Stand, Double Down e Split |
+| 8 | 🎴 Baccarat | Jogador vs Banker — aposte no vencedor ou no empate |
 
 ---
 
 ## 🛠️ Requisitos
 
-- **Python 3.8+**
-- **CustomTkinter** (GUI framework)
+- **Python 3.10+**
+- **CustomTkinter** (`pip install customtkinter`)
 - **tkinter** (incluído com Python)
 - **Módulos padrão**: `random`, `time`, `math`
 
@@ -43,13 +57,14 @@ Um simulador educativo de cassino desenvolvido em Python com interface gráfica 
 
 ## 📦 Instalação
 
-### 1. Clonar ou Baixar o Projeto
+### 1. Clonar o repositório
 
 ```bash
 git clone https://github.com/CaiqueCrepaldi/cassino-simulator.git
+cd cassino-simulator
 ```
 
-### 2. Criar Ambiente Virtual (Recomendado)
+### 2. Criar ambiente virtual (recomendado)
 
 ```bash
 # Windows
@@ -61,7 +76,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Instalar Dependências
+### 3. Instalar dependências
 
 ```bash
 pip install customtkinter
@@ -71,100 +86,35 @@ pip install customtkinter
 
 ## 🚀 Como Executar
 
-### Opção 1: Linha de Comando
+### Opção 1 — Python direto
 
 ```bash
-python cassino.py
+python main.py
 ```
 
-### Opção 2: Executar Direto no Windows
+### Opção 2 — Executável Windows (sem Python)
 
-Clique duas vezes no arquivo `cassino.py` (se a extensão `.py` estiver associada com Python)
+Clique duas vezes em `dist/CassinoSimulator.exe` — nenhuma instalação necessária.
 
-### Opção 3: Terminal PowerShell (Windows)
+### Opção 3 — PowerShell
 
 ```powershell
-python .\cassino.py
+python .\main.py
 ```
 
-O **Menu Principal** abrirá automaticamente. A partir dele, selecione o jogo desejado.
+O **Menu Principal** abre automaticamente. Escolha um jogo, jogue e volte ao menu com o botão **← Menu**.
 
 ---
 
-## 🎮 Jogos Disponíveis
+## 💰 Banca Global
 
-### 🎰 Slot Machine
-Gire os 3 slots e tente obter 3 símbolos iguais. Cada símbolo possui uma probabilidade e um multiplicador de prêmio diferente.
+O simulador mantém **uma única banca compartilhada** entre todos os jogos:
 
-### ✈️ Aviator
-Aposte antes do voo começar. O multiplicador sobe enquanto o avião voa — clique em **RETIRAR** a tempo para embolsar o ganho. Se o avião voar antes de você retirar, a aposta é perdida.
-
-### 🎡 Double
-Escolha uma cor (Preto, Vermelho ou Branco) e gire a roda com 14 segmentos. Se a roda parar na cor apostada, você ganha o multiplicador correspondente. O Branco é raríssimo e paga 14×.
-
----
-
-## 🕹️ Instruções de Uso
-
-### Menu Principal
-
-1. Execute o programa — a tela de seleção abre automaticamente
-2. Escolha **🎰 SLOT MACHINE** ou **✈️ AVIATOR**
-3. Cada jogo abre em uma janela própria (ambos podem rodar ao mesmo tempo)
-
----
-
-### 🎰 Slot Machine — Passo a Passo
-
-**Passo 1:** Veja sua banca inicial de R$ 1.000,00 no topo da janela
-
-**Passo 2:** Digite o valor da aposta no campo **"Valor da Aposta (R$)"**
-- Deve ser maior que 0
-- Não pode exceder a banca atual
-
-**Passo 3:** Clique em **"🎰 GIRAR SLOTS 🎰"** e aguarde a animação (1,5 segundos)
-
-**Passo 4:** Veja o resultado — 3 iguais = vitória 🎉, caso contrário = derrota ❌
-
-**Passo 5 (opcional):** Clique em **"🔄 NOVO JOGO"** para resetar banca e estatísticas
-
----
-
-### ✈️ Aviator — Passo a Passo
-
-**Passo 1:** Defina o valor da aposta no campo ou use os botões de atalho (+10, +25, +50, +100)
-
-**Passo 2:** Clique em **"✈️ APOSTAR & VOAR"** — a aposta é descontada imediatamente e o avião decola
-
-**Passo 3:** Observe o multiplicador subindo em tempo real no canvas
-
-**Passo 4:** Clique em **"💰 RETIRAR"** antes do crash para embolsar:
-```
-Ganho = Aposta × Multiplicador atual
-```
-
-**Passo 5:** Se não retirar a tempo → crash! A aposta é perdida
-
-**Passo 6 (opcional):** Clique em **"🔄 NOVO JOGO"** para resetar banca e histórico
-
----
-
-### 🎡 Double — Passo a Passo
-
-**Passo 1:** Veja sua banca inicial de R$ 1.000,00 no topo da janela
-
-**Passo 2:** Digite o valor da aposta ou use os atalhos (+10, +25, +50, +100)
-
-**Passo 3:** Clique em uma das cores para selecionar sua aposta:
-- ⚫ **PRETO** — paga 2× se acertar
-- 🔴 **VERMELHO** — paga 2× se acertar
-- ⬜ **BRANCO** — paga 14× se acertar (muito raro!)
-
-**Passo 4:** Clique em **"🎡 GIRAR"** — a roda gira com desaceleração progressiva
-
-**Passo 5:** O segmento central (marcado com borda dourada) define o resultado
-
-**Passo 6 (opcional):** Clique em **"🔄 NOVO JOGO"** para resetar banca e histórico
+- Banca inicial: **R$ 1.000,00**
+- O saldo é exibido no **menu principal** e dentro de cada jogo
+- Ganhos e perdas em qualquer jogo refletem imediatamente no saldo global
+- **Menu → botão "Resetar Banca"**: zera e redefine para R$ 1.000,00
+- **Cada jogo → botão "Novo Jogo"**: também reseta a banca para R$ 1.000,00
 
 ---
 
@@ -172,72 +122,32 @@ Ganho = Aposta × Multiplicador atual
 
 ### 🎰 Slot Machine
 
-#### Símbolos, Probabilidades e Multiplicadores
+Gire 3 slots e torça por 3 símbolos iguais.
 
-| Símbolo | Chance por slot | Multiplicador | Tipo |
-|---------|----------------|---------------|------|
-| 🔥 Fogo | 40% | 2× | Mais comum |
-| ⭐ Estrela | 35% | 2× | Intermediário |
-| 🤑 Dinheiro | 25% | 3× | Jackpot (raro) |
+| Símbolo | Chance por slot | Multiplicador |
+|---------|----------------|---------------|
+| 🔥 Fogo | 40% | 2× |
+| ⭐ Estrela | 35% | 2× |
+| 🤑 Dinheiro | 25% | 3× |
 
-#### Probabilidades Reais de Vitória (3 iguais)
-
-| Combinação | Cálculo | Chance |
-|-----------|---------|--------|
-| 3 × 🔥 | 0.40³ | 6,40% |
-| 3 × ⭐ | 0.35³ | 4,29% |
-| 3 × 🤑 | 0.25³ | 1,56% |
-| **Total** | | **~12,25%** |
-
-#### Cálculo de Prêmio
-
-```
-Vitória → Ganho = Aposta × Multiplicador do símbolo
-Derrota → Perda = Aposta
-```
+Chance total de vitória (3 iguais): **~12,25%**
 
 ---
 
 ### ✈️ Aviator
 
-#### Como o Multiplicador Cresce
+O multiplicador sobe a partir de **1,00×** enquanto o avião voa. Clique em **RETIRAR** antes do crash para embolsar `aposta × multiplicador`. O ponto de crash é gerado com distribuição exponencial — a maioria entre 1× e 3×, crashes acima de 10× são raros.
 
-O multiplicador começa em **1,00×** e sobe de forma exponencial a cada 100 ms. O crescimento acelera conforme o valor aumenta — igual ao comportamento do jogo original.
+O jogo também suporta **saque automático**: defina um multiplicador-alvo e o cashout acontece automaticamente ao atingi-lo.
 
-#### Geração do Ponto de Crash
-
-O crash é gerado com **distribuição exponencial** antes do voo começar (o jogador não sabe quando vai acontecer):
-
-```
-crash = 0.99 / (1 - u × 0.99)    onde u ∈ [0, 1) aleatório
-```
-
-Isso resulta em:
-- Maioria dos crashes entre **1× e 3×** (crashes frequentes e baixos)
-- Crashes acima de **10×** são raros
-- Máximo limitado a **100×** na UI
-
-#### Histórico de Crashes
-
-O painel lateral exibe os últimos 8 crashes com código de cores:
-
-| Cor | Faixa |
-|-----|-------|
-| 🔴 Vermelho | Abaixo de 2× |
-| 🟡 Amarelo | Entre 2× e 5× |
-| 🟢 Verde | Acima de 5× |
-
-#### Atalhos de Aposta
-
-Botões **+10 / +25 / +50 / +100** somam ao valor atual no campo de aposta, facilitando ajustes rápidos.
+Histórico dos últimos crashes exibido com código de cores:
+- 🔴 Abaixo de 2× · 🟡 Entre 2× e 5× · 🟢 Acima de 5×
 
 ---
 
 ### 🎡 Double
 
-#### Segmentos da Roda
-
-A roda possui **14 segmentos** com a seguinte distribuição, igual ao Double real:
+Roda com 14 segmentos igual ao Double real.
 
 | Cor | Segmentos | Chance | Multiplicador |
 |-----|-----------|--------|---------------|
@@ -245,160 +155,113 @@ A roda possui **14 segmentos** com a seguinte distribuição, igual ao Double re
 | 🔴 Vermelho | 6/14 | ~42,8% | 2× |
 | ⬜ Branco | 1/14 | ~7,1% | 14× |
 
-#### Como o Resultado é Gerado
+Resultado sorteado antes da animação para garantir imparcialidade. A roda anima com pelo menos 3 voltas completas e desaceleração progressiva.
 
-O resultado é sorteado **antes** da animação começar, garantindo imparcialidade total. A roda faz pelo menos 3 voltas completas e para com precisão no segmento sorteado, usando desaceleração progressiva nos últimos passos — igual ao comportamento do Double real.
+---
 
-#### Histórico
+### 🎲 Crash Dice
 
-O painel exibe os últimos 10 resultados com os emojis de cada cor para referência rápida.
+Escolha até **3 números** (1–6) e role 2 dados. Regras de pagamento:
+
+| Condição | Multiplicador |
+|----------|---------------|
+| Dupla exata (ambos os dados = número escolhido) | 5× |
+| Soma dos dados = número escolhido | 3× |
+| Um dado = número escolhido | 2× |
+| Nenhum acerto | Perde a aposta |
+
+---
+
+### 🎠 Roleta
+
+Roleta europeia com **37 números** (0–36). Tipos de aposta disponíveis:
+
+| Tipo | Cobertura | Pagamento |
+|------|-----------|-----------|
+| Número exato | 1/37 | 35× |
+| Cor (Vermelho/Preto) | 18/37 | 1× |
+| Par/Ímpar | 18/37 | 1× |
+| Baixo (1–18) / Alto (19–36) | 18/37 | 1× |
+| Dúzia (1ª/2ª/3ª) | 12/37 | 2× |
+| Coluna | 12/37 | 2× |
+
+---
+
+### 🪙 Coin Flip
+
+Escolha **Cara** ou **Coroa**. Acertou → dobra a aposta (2×). Errou → perde a aposta. Probabilidade: 50/50.
+
+---
+
+### 🃏 Blackjack
+
+Blackjack clássico contra o dealer com as seguintes opções:
+
+- **Hit** — pega mais uma carta
+- **Stand** — para com as cartas atuais
+- **Double Down** — dobra a aposta e recebe exatamente mais uma carta
+- **Split** — divide um par em duas mãos separadas
+
+Blackjack natural paga **3:2**. Dealer bate em soft 17.
+
+---
+
+### 🎴 Baccarat
+
+Aposte antes das cartas serem distribuídas:
+
+| Aposta | Paga | Casa |
+|--------|------|------|
+| Jogador vence | 1× | ~1,24% |
+| Banker vence | 0,95× (5% comissão) | ~1,06% |
+| Empate | 8× | ~14,4% |
+
+Regras de terceira carta do Baccarat aplicadas automaticamente.
 
 ---
 
 ## 💻 Estrutura do Código
 
-### Visão Geral das Classes
-
 ```
-cassino.py
+basicos py/
 │
-├── MenuPrincipal          ← Tela inicial de seleção
-│   ├── abrir_slots()      ← Abre janela do Slot Machine
-│   ├── abrir_aviator()    ← Abre janela do Aviator
-│   └── abrir_double()     ← Abre janela do Double
+├── main.py                 ← Ponto de entrada; classes Bank e App
+├── menu.py                 ← MenuPrincipal (exibe banca + botão reset)
 │
-├── CassinoSimulator       ← Jogo 1: Slot Machine
-│   ├── girar()
-│   ├── animacao_giro()
-│   ├── mostrar_resultado()
-│   └── resetar_estatisticas()
+├── games/
+│   ├── slot_machine.py     ← SlotMachine
+│   ├── aviator.py          ← AviatorGame
+│   ├── double.py           ← DoubleGame
+│   ├── crash_dice.py       ← CrashDice
+│   ├── roulette.py         ← RouletteGame
+│   ├── coin_flip.py        ← CoinFlip
+│   ├── blackjack.py        ← BlackjackGame
+│   └── baccarat.py         ← BaccaratGame
 │
-├── AviatorGame            ← Jogo 2: Aviator
-│   ├── iniciar_rodada()
-│   ├── _tick()            ← Loop de animação (a cada 100ms)
-│   ├── _crash()           ← Finaliza o voo
-│   ├── retirar()          ← Cashout antecipado
-│   ├── _gerar_crash()     ← Distribuição exponencial
-│   └── resetar()
-│
-└── DoubleGame             ← Jogo 3: Double
-    ├── girar()
-    ├── _desenhar_roda()   ← Renderiza os 14 segmentos no canvas
-    ├── _animar()          ← Loop com desaceleração progressiva
-    ├── _mostrar_resultado()
-    ├── _selecionar_cor()
-    └── resetar()
+├── CassinoSimulator.spec   ← Configuração PyInstaller
+├── casino.ico              ← Ícone do executável
+└── dist/
+    └── CassinoSimulator.exe ← Executável Windows
 ```
 
-### Fluxo do Aviator
+### Padrão de navegação (janela única)
 
 ```
-1. Jogador define aposta
-         ↓
-2. Clica em APOSTAR & VOAR
-         ↓
-3. Aposta descontada da banca
-         ↓
-4. Crash gerado internamente (oculto)
-         ↓
-5. _tick() roda a cada 100ms → multiplicador sobe
-         ↓
-    ┌────┴────┐
-    │         │
-Retirou    Não retirou
-    │         │
-Ganho =   _crash() →
-Aposta ×   Perdeu a
-Mult atual  aposta
+App (main.py)
+ ├── Bank  ← banca global, passada a todos os jogos
+ │
+ ├── show_menu() → MenuPrincipal(root, container, show_game, bank)
+ │
+ └── show_game(name) → <Jogo>(root, container, show_menu, bank)
 ```
+
+Cada jogo expõe `self.balance` como `@property` que lê/escreve `self.bank.balance`, mantendo toda a lógica de ganhos e perdas inalterada.
 
 ---
 
-### Fluxo do Double
+## 🔒 Aviso
 
-```
-1. Jogador escolhe a cor (Preto / Vermelho / Branco)
-         ↓
-2. Define a aposta e clica em GIRAR
-         ↓
-3. Aposta descontada da banca
-         ↓
-4. Resultado sorteado internamente (oculto)
-         ↓
-5. Roda anima: 3 voltas + desaceleração até o segmento sorteado
-         ↓
-6. Segmento central (borda dourada) = resultado
-         ↓
-    ┌────┴────┐
-    │         │
-  Acertou   Errou
-    │         │
-Ganho =    Perdeu
-Aposta ×   a aposta
-Mult
-```
-
----
-
-## 🎨 Customização
-
-### Alterar Banca Inicial
-
-Em ambas as classes (`CassinoSimulator` e `AviatorGame`):
-```python
-self.banca = 1000.00  # altere para o valor desejado
-```
-
-### Alterar Velocidade do Aviator
-
-```python
-INTERVALO_MS = 100   # menor = mais rápido (padrão: 100ms)
-CRESCIMENTO   = 0.05 # maior = multiplicador sobe mais depressa
-```
-
-### Alterar Multiplicadores do Slot
-
-Em `mostrar_resultado()`:
-```python
-multiplicador = 2  # para 🔥 e ⭐
-multiplicador = 3  # para 🤑 (jackpot)
-```
-
-### Alterar Velocidade da Roda (Double)
-
-Em `DoubleGame`:
-```python
-TICK_MS   = 30   # ms entre frames (menor = mais rápido)
-```
-
-### Alterar Cores
-
-Principais hexadecimais usados:
-| Cor | Código | Onde |
-|-----|--------|------|
-| Preto (fundo) | `#000000` | Frames principais |
-| Vermelho (Slot) | `#CC0000` | Botão girar |
-| Azul (Aviator) | `#0055CC` | Botão apostar |
-| Laranja (Retirar) | `#CC7700` | Botão cashout |
-| Roxo (Double) | `#6600CC` | Botão girar Double |
-| Verde (ganho) | `#00FF00` | Banca / vitória |
-
----
-
-## 🔒 Avisos Importantes
-
-> ⚠️ **Este é um SIMULADOR EDUCATIVO apenas**
-> - Não envolve dinheiro real
-> - Não deve ser usado como referência para apostas reais
-> - Desenvolvido exclusivamente para fins acadêmicos
-
----
-
-## 📝 Padrões de Código
-
-- Comentários em **inglês** (padrão profissional de desenvolvimento)
-- Interface em **português brasileiro**
-- Código orientado a objetos com classes separadas por responsabilidade
+> ⚠️ **Simulador educativo apenas** — não envolve dinheiro real e não deve ser usado como referência para apostas reais.
 
 ---
 
@@ -410,23 +273,13 @@ Código educativo de livre uso para estudo e modificação.
 
 ## 👨‍💻 Autor
 
-Desenvolvido como projeto acadêmico de Python com CustomTkinter.
+**Caique Crepaldi** — [@CaiqueCrepaldi](https://github.com/CaiqueCrepaldi)
 
 ---
 
-## 📞 Suporte
-
-Para problemas ou dúvidas:
-
-1. Verifique se o Python 3.8+ está instalado: `python --version`
-2. Confirme a instalação do CustomTkinter: `pip show customtkinter`
-3. Tente recriar o ambiente virtual e reinstalar as dependências
-4. Execute em um terminal aberto especificamente para este projeto
-
----
-
-**Versão**: 3.0.0
-**Data**: Maio 2026
-**Status**: Funcional e Testado ✅
-**Novidades v3.0**: Jogo Double · Roda animada com 14 segmentos · Correção de bug na exibição do resultado
-**Novidades v2.0**: Menu Principal · Jogo Aviator · Canvas animado · Histórico de crashes
+**Versão**: 4.0.0  
+**Data**: Maio 2026  
+**Status**: Funcional e Testado ✅  
+**Novidades v4.0**: Banca global compartilhada · Exibição da banca no menu · Botão de reset no menu  
+**Novidades v3.x**: Blackjack · Baccarat · Roleta · Coin Flip · Crash Dice · Janela única · Tela cheia  
+**Novidades v2.0**: Aviator · Double · Menu Principal
