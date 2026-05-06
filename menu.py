@@ -64,10 +64,11 @@ class MenuPrincipal:
         },
     ]
 
-    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, show_game: Callable) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, show_game: Callable, bank) -> None:
         self.root = root
         self.container = container
         self.show_game = show_game
+        self.bank = bank
         self.root.title("🎰 Cassino Simulator – Menu Principal")
         self._build_ui()
 
@@ -91,7 +92,27 @@ class MenuPrincipal:
             text="Escolha um jogo para jogar!",
             font=("Arial", 13),
             text_color="#CCCCCC",
-        ).pack(pady=(0, 14))
+        ).pack(pady=(0, 6))
+
+        # Shared bank display
+        bank_row = ctk.CTkFrame(main, fg_color="#111111", corner_radius=8)
+        bank_row.pack(padx=20, pady=(0, 10), fill="x")
+
+        self.bank_label = ctk.CTkLabel(
+            bank_row,
+            text=f"💰 Banca: R$ {self.bank.balance:.2f}",
+            font=("Arial", 14, "bold"),
+            text_color="#00FF00",
+        )
+        self.bank_label.pack(side="left", padx=14, pady=8, expand=True)
+
+        ctk.CTkButton(
+            bank_row, text="🔄 Resetar Banca",
+            command=self._reset_bank,
+            font=("Arial", 11, "bold"), width=130, height=32,
+            fg_color="#330000", hover_color="#550000",
+            text_color="#FF8888", corner_radius=6,
+        ).pack(side="right", padx=8, pady=8)
 
         # Grade 2 colunas × 4 linhas
         grid = ctk.CTkFrame(main, fg_color="#000000")
@@ -131,3 +152,7 @@ class MenuPrincipal:
             font=("Arial", 10),
             text_color="#444444",
         ).pack(pady=10)
+
+    def _reset_bank(self) -> None:
+        self.bank.reset()
+        self.bank_label.configure(text=f"💰 Banca: R$ {self.bank.balance:.2f}")

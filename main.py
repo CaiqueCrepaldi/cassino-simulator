@@ -4,6 +4,16 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
+class Bank:
+    INITIAL = 1_000.00
+
+    def __init__(self):
+        self.balance = self.INITIAL
+
+    def reset(self):
+        self.balance = self.INITIAL
+
+
 class App:
     def __init__(self) -> None:
         self.root = ctk.CTk()
@@ -13,6 +23,8 @@ class App:
         self.root.minsize(620, 720)
         self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
         self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
+
+        self.bank = Bank()
 
         self._container = ctk.CTkFrame(self.root, fg_color="#0d0d0d", corner_radius=0)
         self._container.pack(fill="both", expand=True)
@@ -27,34 +39,34 @@ class App:
     def show_menu(self) -> None:
         self._clear()
         from menu import MenuPrincipal
-        MenuPrincipal(self.root, self._container, self.show_game)
+        MenuPrincipal(self.root, self._container, self.show_game, self.bank)
 
     def show_game(self, name: str) -> None:
         self._clear()
         if name == "slot":
             from games.slot_machine import SlotMachine
-            SlotMachine(self.root, self._container, self.show_menu)
+            SlotMachine(self.root, self._container, self.show_menu, self.bank)
         elif name == "aviator":
             from games.aviator import AviatorGame
-            AviatorGame(self.root, self._container, self.show_menu)
+            AviatorGame(self.root, self._container, self.show_menu, self.bank)
         elif name == "double":
             from games.double import DoubleGame
-            DoubleGame(self.root, self._container, self.show_menu)
+            DoubleGame(self.root, self._container, self.show_menu, self.bank)
         elif name == "crash_dice":
             from games.crash_dice import CrashDice
-            CrashDice(self.root, self._container, self.show_menu)
+            CrashDice(self.root, self._container, self.show_menu, self.bank)
         elif name == "blackjack":
             from games.blackjack import Blackjack
-            Blackjack(self.root, self._container, self.show_menu)
+            Blackjack(self.root, self._container, self.show_menu, self.bank)
         elif name == "roulette":
             from games.roulette import Roulette
-            Roulette(self.root, self._container, self.show_menu)
+            Roulette(self.root, self._container, self.show_menu, self.bank)
         elif name == "coin_flip":
             from games.coin_flip import CoinFlip
-            CoinFlip(self.root, self._container, self.show_menu)
+            CoinFlip(self.root, self._container, self.show_menu, self.bank)
         elif name == "baccarat":
             from games.baccarat import Baccarat
-            Baccarat(self.root, self._container, self.show_menu)
+            Baccarat(self.root, self._container, self.show_menu, self.bank)
 
 
 if __name__ == "__main__":

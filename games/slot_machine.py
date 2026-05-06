@@ -24,20 +24,28 @@ class SlotMachine:
     MULTIPLIERS = {"🔥": 2, "⭐": 2, "🤑": 3}
     INITIAL_BALANCE = 1_000.00
 
-    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback, bank) -> None:
         self.root = root
         self.container = container
         self.back_callback = back_callback
+        self.bank = bank
         self.root.title("🎰 Slot Machine")
 
         # State
-        self.balance: float = self.INITIAL_BALANCE
         self.current_bet: float = 0.0
         self.attempts: int = 0
         self.wins: int = 0
         self.spin_job = None
 
         self._build_ui()
+
+    @property
+    def balance(self) -> float:
+        return self.bank.balance
+
+    @balance.setter
+    def balance(self, v: float) -> None:
+        self.bank.balance = v
 
     def _go_back(self) -> None:
         if self.spin_job:

@@ -21,14 +21,14 @@ class CoinFlip:
     INITIAL_BALANCE = 1_000.00
     FACES = {"cara": "🪙", "coroa": "👑"}
 
-    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback, bank) -> None:
         self.root = root
         self.container = container
         self.back_callback = back_callback
+        self.bank = bank
         self.root.title("🪙 Coin Flip")
 
         # State
-        self.balance: float      = self.INITIAL_BALANCE
         self.current_bet: float  = 0.0
         self.chosen_side: str | None = None
         self.flipping: bool      = False
@@ -42,6 +42,14 @@ class CoinFlip:
         self.history: list[str] = []    # "cara" or "coroa"
 
         self._build_ui()
+
+    @property
+    def balance(self) -> float:
+        return self.bank.balance
+
+    @balance.setter
+    def balance(self, v: float) -> None:
+        self.bank.balance = v
 
     def _go_back(self) -> None:
         self._stop_auto()

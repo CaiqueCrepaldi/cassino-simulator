@@ -45,14 +45,14 @@ class Roulette:
         [34, 35, 36],
     ]
 
-    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback, bank) -> None:
         self.root = root
         self.container = container
         self.back_callback = back_callback
+        self.bank = bank
         self.root.title("🎡 Roleta")
 
         # State
-        self.balance: float          = self.INITIAL_BALANCE
         self.bets: dict[str, float]  = {}   # bet_key -> amount
         self.spinning: bool          = False
         self.job_id                  = None
@@ -63,6 +63,14 @@ class Roulette:
         self.wins: int   = 0
 
         self._build_ui()
+
+    @property
+    def balance(self) -> float:
+        return self.bank.balance
+
+    @balance.setter
+    def balance(self, v: float) -> None:
+        self.bank.balance = v
 
     def _go_back(self) -> None:
         if self.job_id:

@@ -28,13 +28,12 @@ class Baccarat:
     ANIM_STEPS = 10
     ANIM_MS    = 14
 
-    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback, bank) -> None:
         self.root = root
         self.container = container
         self.back_callback = back_callback
+        self.bank = bank
         self.root.title("🎴 Baccarat")
-
-        self.balance: float = self.INITIAL_BALANCE
         self.current_bet: float = 0.0
         self.chosen_side: str | None = None   # "player", "banker", "tie"
         self.game_active: bool = False
@@ -43,6 +42,14 @@ class Baccarat:
         self.wins: int = 0
 
         self._build_ui()
+
+    @property
+    def balance(self) -> float:
+        return self.bank.balance
+
+    @balance.setter
+    def balance(self, v: float) -> None:
+        self.bank.balance = v
 
     def _go_back(self) -> None:
         self.back_callback()

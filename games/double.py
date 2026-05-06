@@ -38,14 +38,14 @@ class DoubleGame:
     TICK_MS         = 30   # ms per animation frame
     INITIAL_BALANCE = 1_000.00
 
-    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
+    def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback, bank) -> None:
         self.root = root
         self.container = container
         self.back_callback = back_callback
+        self.bank = bank
         self.root.title("🎡 Double")
 
         # State
-        self.balance: float      = self.INITIAL_BALANCE
         self.current_bet: float  = 0.0
         self.chosen_color: str | None = None
         self.spinning: bool      = False
@@ -63,6 +63,14 @@ class DoubleGame:
         self.wins: int    = 0
 
         self._build_ui()
+
+    @property
+    def balance(self) -> float:
+        return self.bank.balance
+
+    @balance.setter
+    def balance(self, v: float) -> None:
+        self.bank.balance = v
 
     def _go_back(self) -> None:
         if self.job_id:
