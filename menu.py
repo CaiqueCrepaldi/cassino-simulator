@@ -55,6 +55,13 @@ class MenuPrincipal:
             "hover":    "#777700",
             "key":      "coin_flip",
         },
+        {
+            "text":     "🎴  BACCARAT",
+            "subtitle": "Aposte em Jogador, Banca ou Empate — chegue mais perto do 9!",
+            "fg":       "#1a1a6e",
+            "hover":    "#0a0a4e",
+            "key":      "baccarat",
+        },
     ]
 
     def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, show_game: Callable) -> None:

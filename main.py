@@ -52,6 +52,9 @@ class App:
         elif name == "coin_flip":
             from games.coin_flip import CoinFlip
             CoinFlip(self.root, self._container, self.show_menu)
+        elif name == "baccarat":
+            from games.baccarat import Baccarat
+            Baccarat(self.root, self._container, self.show_menu)
 
 
 if __name__ == "__main__":
