@@ -1,18 +1,7 @@
 import customtkinter as ctk
-import importlib
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
-
-GAMES = {
-    "slot":       ("games.slot_machine", "SlotMachine"),
-    "aviator":    ("games.aviator",      "AviatorGame"),
-    "double":     ("games.double",       "DoubleGame"),
-    "crash_dice": ("games.crash_dice",   "CrashDice"),
-    "blackjack":  ("games.blackjack",    "Blackjack"),
-    "roulette":   ("games.roulette",     "Roulette"),
-    "coin_flip":  ("games.coin_flip",    "CoinFlip"),
-}
 
 
 class App:
@@ -42,10 +31,27 @@ class App:
 
     def show_game(self, name: str) -> None:
         self._clear()
-        mod_path, cls_name = GAMES[name]
-        mod = importlib.import_module(mod_path)
-        cls = getattr(mod, cls_name)
-        cls(self.root, self._container, self.show_menu)
+        if name == "slot":
+            from games.slot_machine import SlotMachine
+            SlotMachine(self.root, self._container, self.show_menu)
+        elif name == "aviator":
+            from games.aviator import AviatorGame
+            AviatorGame(self.root, self._container, self.show_menu)
+        elif name == "double":
+            from games.double import DoubleGame
+            DoubleGame(self.root, self._container, self.show_menu)
+        elif name == "crash_dice":
+            from games.crash_dice import CrashDice
+            CrashDice(self.root, self._container, self.show_menu)
+        elif name == "blackjack":
+            from games.blackjack import Blackjack
+            Blackjack(self.root, self._container, self.show_menu)
+        elif name == "roulette":
+            from games.roulette import Roulette
+            Roulette(self.root, self._container, self.show_menu)
+        elif name == "coin_flip":
+            from games.coin_flip import CoinFlip
+            CoinFlip(self.root, self._container, self.show_menu)
 
 
 if __name__ == "__main__":
