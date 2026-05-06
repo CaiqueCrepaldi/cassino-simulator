@@ -64,68 +64,67 @@ class Baccarat:
 
         ctk.CTkLabel(
             main, text="🎴  BACCARAT",
-            font=("Arial", 30, "bold"), text_color="#FFD700",
-        ).pack(pady=(4, 2))
+            font=("Arial", 26, "bold"), text_color="#FFD700",
+        ).pack(pady=(2, 0))
 
         ctk.CTkLabel(
-            main, text="Aposte em Jogador, Banca ou Empate — chegue mais perto do 9!",
-            font=("Arial", 11), text_color="#AAAADD",
+            main, text="Chegue mais perto do 9 — Jogador: 1×  |  Banca: 0.95×  |  Empate: 8×",
+            font=("Arial", 10), text_color="#888899",
         ).pack()
 
         self.balance_label = ctk.CTkLabel(
             main, text=self._balance_text(),
-            font=("Arial", 15, "bold"), text_color="#FFD700",
+            font=("Arial", 14, "bold"), text_color="#FFD700",
         )
-        self.balance_label.pack(pady=(6, 0))
+        self.balance_label.pack(pady=(4, 0))
 
-        # Payout table
-        pay_frame = ctk.CTkFrame(main, fg_color="#14143a", corner_radius=10)
-        pay_frame.pack(padx=20, pady=8, fill="x")
+        # ── Cards row: BANCA (esq.) e JOGADOR (dir.) lado a lado ──
+        cards_row = ctk.CTkFrame(main, fg_color=BG)
+        cards_row.pack(padx=20, pady=8, fill="x")
+
+        # Banca
+        banker_col = ctk.CTkFrame(cards_row, fg_color="#1a0a2e", corner_radius=10)
+        banker_col.pack(side="left", fill="both", expand=True, padx=(0, 6))
+        banker_col.pack_propagate(False)
+        banker_col.configure(height=120)
+
         ctk.CTkLabel(
-            pay_frame,
-            text="💡  Jogador: 1×  |  Banca: 0.95× (5% comissão)  |  Empate: 8×",
-            font=("Arial", 11), text_color="#AAAADD",
-        ).pack(pady=8)
+            banker_col, text="🟥 BANCA",
+            font=("Arial", 12, "bold"), text_color="#FF8888",
+        ).pack(pady=(6, 2))
 
-        # ── Banker area ──────────────────────────────────────
-        ctk.CTkLabel(
-            main, text="BANCA",
-            font=("Arial", 13, "bold"), text_color="#FF8888",
-        ).pack(pady=(10, 2))
-
-        self.banker_frame = ctk.CTkFrame(main, fg_color="#1a0a2e", corner_radius=10)
-        self.banker_frame.pack(padx=20, fill="x")
-
-        self.banker_cards_frame = ctk.CTkFrame(self.banker_frame, fg_color="#1a0a2e")
-        self.banker_cards_frame.pack(pady=10, padx=10)
+        self.banker_cards_frame = ctk.CTkFrame(banker_col, fg_color="#1a0a2e")
+        self.banker_cards_frame.pack(expand=True)
 
         self.banker_score_label = ctk.CTkLabel(
-            self.banker_frame, text="",
-            font=("Arial", 13, "bold"), text_color="#FFFFFF",
+            banker_col, text="—",
+            font=("Arial", 12, "bold"), text_color="#CCCCCC",
         )
-        self.banker_score_label.pack(pady=(0, 8))
+        self.banker_score_label.pack(pady=(2, 6))
 
-        # ── Player area ──────────────────────────────────────
+        # Jogador
+        player_col = ctk.CTkFrame(cards_row, fg_color="#0a1a2e", corner_radius=10)
+        player_col.pack(side="left", fill="both", expand=True, padx=(6, 0))
+        player_col.pack_propagate(False)
+        player_col.configure(height=120)
+
         ctk.CTkLabel(
-            main, text="JOGADOR",
-            font=("Arial", 13, "bold"), text_color="#88CCFF",
-        ).pack(pady=(10, 2))
+            player_col, text="🟦 JOGADOR",
+            font=("Arial", 12, "bold"), text_color="#88CCFF",
+        ).pack(pady=(6, 2))
 
-        self.player_frame = ctk.CTkFrame(main, fg_color="#0a1a2e", corner_radius=10)
-        self.player_frame.pack(padx=20, fill="x")
-
-        self.player_cards_frame = ctk.CTkFrame(self.player_frame, fg_color="#0a1a2e")
-        self.player_cards_frame.pack(pady=10, padx=10)
+        self.player_cards_frame = ctk.CTkFrame(player_col, fg_color="#0a1a2e")
+        self.player_cards_frame.pack(expand=True)
 
         self.player_score_label = ctk.CTkLabel(
-            self.player_frame, text="",
-            font=("Arial", 13, "bold"), text_color="#FFFFFF",
+            player_col, text="—",
+            font=("Arial", 12, "bold"), text_color="#CCCCCC",
         )
-        self.player_score_label.pack(pady=(0, 8))
+        self.player_score_label.pack(pady=(2, 6))
 
         # ── Bet side selector ────────────────────────────────
         side_row = ctk.CTkFrame(main, fg_color=BG)
-        side_row.pack(padx=20, pady=8, fill="x")
+        side_row.pack(padx=20, pady=(4, 2), fill="x")
 
         self.side_buttons: dict[str, ctk.CTkButton] = {}
         sides = [
@@ -137,17 +136,17 @@ class Baccarat:
             btn = ctk.CTkButton(
                 side_row, text=label,
                 command=lambda k=key: self._choose_side(k),
-                font=("Arial", 14, "bold"), height=46, corner_radius=10,
+                font=("Arial", 13, "bold"), height=40, corner_radius=10,
                 fg_color=fg, hover_color=hover, text_color="#FFFFFF",
             )
-            btn.pack(side="left", padx=4, fill="x", expand=True)
+            btn.pack(side="left", padx=3, fill="x", expand=True)
             self.side_buttons[key] = btn
 
         self.chosen_label = ctk.CTkLabel(
             main, text="Nenhuma aposta selecionada",
-            font=("Arial", 12), text_color="#888888",
+            font=("Arial", 11), text_color="#888888",
         )
-        self.chosen_label.pack(pady=(0, 4))
+        self.chosen_label.pack(pady=(2, 0))
 
         # ── Bet row ──────────────────────────────────────────
         bet_row = ctk.CTkFrame(main, fg_color=BG)
@@ -155,22 +154,22 @@ class Baccarat:
 
         ctk.CTkLabel(
             bet_row, text="Aposta (R$):",
-            font=("Arial", 13, "bold"), text_color="#FFFFFF",
+            font=("Arial", 12, "bold"), text_color="#FFFFFF",
         ).pack(side="left", padx=8)
 
         self.bet_entry = ctk.CTkEntry(
             bet_row, placeholder_text="Ex: 50.00",
-            font=("Arial", 13), corner_radius=8,
+            font=("Arial", 12), corner_radius=8,
             fg_color="#14143a", border_color="#FFD700",
-            text_color="#FFFFFF", width=140,
+            text_color="#FFFFFF", width=130,
         )
-        self.bet_entry.pack(side="left", padx=8)
+        self.bet_entry.pack(side="left", padx=6)
 
         for v in [10, 25, 50, 100]:
             ctk.CTkButton(
                 bet_row, text=f"+{v}",
                 command=lambda val=v: self._add_bet(val),
-                font=("Arial", 11, "bold"), width=45, height=30,
+                font=("Arial", 11, "bold"), width=44, height=28,
                 fg_color="#14143a", hover_color="#1e1e50",
                 text_color="#FFD700", corner_radius=6,
             ).pack(side="left", padx=2)
@@ -179,34 +178,34 @@ class Baccarat:
         self.deal_button = ctk.CTkButton(
             main, text="🎴  DISTRIBUIR",
             command=self.deal,
-            font=("Arial", 18, "bold"), height=55, corner_radius=10,
+            font=("Arial", 17, "bold"), height=50, corner_radius=10,
             fg_color="#FFD700", hover_color="#CCA800", text_color="#000000",
         )
-        self.deal_button.pack(padx=20, pady=8, fill="x")
+        self.deal_button.pack(padx=20, pady=(6, 2), fill="x")
 
         ctk.CTkButton(
             main, text="🔄 NOVO JOGO (resetar banca)",
             command=self.reset,
-            font=("Arial", 12, "bold"), height=34, corner_radius=8,
+            font=("Arial", 11, "bold"), height=30, corner_radius=8,
             fg_color="#14143a", hover_color="#1e1e50", text_color="#888888",
         ).pack(padx=20, pady=(0, 4), fill="x")
 
         # ── Result ───────────────────────────────────────────
         self.result_frame = ctk.CTkFrame(main, fg_color="#0a0a1e", corner_radius=10)
-        self.result_frame.pack(padx=20, pady=6, fill="x")
+        self.result_frame.pack(padx=20, pady=4, fill="x")
 
         self.result_label = ctk.CTkLabel(
             self.result_frame,
             text="Selecione sua aposta e clique em DISTRIBUIR!",
-            font=("Arial", 14, "bold"), text_color="#AAAADD", wraplength=540,
+            font=("Arial", 13, "bold"), text_color="#AAAADD", wraplength=540,
         )
-        self.result_label.pack(pady=14, padx=16)
+        self.result_label.pack(pady=10, padx=16)
 
         self.stats_label = ctk.CTkLabel(
             main, text=self._stats_text(),
             font=("Arial", 11), text_color="#555588",
         )
-        self.stats_label.pack(pady=(0, 10))
+        self.stats_label.pack(pady=(2, 8))
 
     # ── Card rendering ───────────────────────────────────────
 
@@ -233,8 +232,8 @@ class Baccarat:
         for card in b_hand:
             self._card_widget(self.banker_cards_frame, card)
 
-        self.player_score_label.configure(text=f"Jogador: {self._bac_value(p_hand)}")
-        self.banker_score_label.configure(text=f"Banca: {self._bac_value(b_hand)}")
+        self.player_score_label.configure(text=f"Pontos: {self._bac_value(p_hand)}")
+        self.banker_score_label.configure(text=f"Pontos: {self._bac_value(b_hand)}")
 
     # ── Helpers ──────────────────────────────────────────────
 
@@ -433,8 +432,8 @@ class Baccarat:
             text="Selecione sua aposta e clique em DISTRIBUIR!", text_color="#AAAADD"
         )
         self.result_frame.configure(border_width=0)
-        self.player_score_label.configure(text="")
-        self.banker_score_label.configure(text="")
+        self.player_score_label.configure(text="—")
+        self.banker_score_label.configure(text="—")
         self.stats_label.configure(text=self._stats_text())
         self.deal_button.configure(state="normal")
         self.bet_entry.configure(state="normal")
