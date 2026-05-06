@@ -77,40 +77,52 @@ class MenuPrincipal:
 
         main = ctk.CTkFrame(bg, fg_color="#000000", corner_radius=10)
         main.pack(expand=True, fill="y", anchor="center")
-        ctk.CTkFrame(main, width=460, height=1, fg_color="#000000").pack()
+        ctk.CTkFrame(main, width=620, height=1, fg_color="#000000").pack()
 
         ctk.CTkLabel(
             main,
             text="🎰 CASSINO SIMULATOR 🎰",
             font=("Arial", 26, "bold"),
             text_color="#FFD700",
-        ).pack(pady=(24, 4))
+        ).pack(pady=(20, 4))
 
         ctk.CTkLabel(
             main,
             text="Escolha um jogo para jogar!",
             font=("Arial", 13),
             text_color="#CCCCCC",
-        ).pack(pady=(0, 18))
+        ).pack(pady=(0, 14))
 
-        for game in self.GAMES:
+        # Grade 2 colunas × 4 linhas
+        grid = ctk.CTkFrame(main, fg_color="#000000")
+        grid.pack(padx=20, fill="x")
+
+        left_col  = ctk.CTkFrame(grid, fg_color="#000000")
+        right_col = ctk.CTkFrame(grid, fg_color="#000000")
+        left_col.pack(side="left", fill="x", expand=True, padx=(0, 6))
+        right_col.pack(side="left", fill="x", expand=True, padx=(6, 0))
+
+        half = len(self.GAMES) // 2
+        for i, game in enumerate(self.GAMES):
+            col = left_col if i < half else right_col
             ctk.CTkButton(
-                main,
+                col,
                 text=game["text"],
                 command=lambda k=game["key"]: self.show_game(k),
-                font=("Arial", 17, "bold"),
+                font=("Arial", 14, "bold"),
                 corner_radius=10,
                 height=52,
                 fg_color=game["fg"],
                 hover_color=game["hover"],
                 text_color="#FFFFFF",
-            ).pack(pady=(0, 3), fill="x", padx=30)
+            ).pack(pady=(0, 2), fill="x")
 
             ctk.CTkLabel(
-                main,
+                col,
                 text=game["subtitle"],
-                font=("Arial", 10),
-                text_color="#888888",
+                font=("Arial", 9),
+                text_color="#777777",
+                wraplength=260,
             ).pack(pady=(0, 10))
 
         ctk.CTkLabel(
@@ -118,4 +130,4 @@ class MenuPrincipal:
             text="Projeto acadêmico – sem dinheiro real envolvido",
             font=("Arial", 10),
             text_color="#444444",
-        ).pack(pady=12)
+        ).pack(pady=10)
