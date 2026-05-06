@@ -22,8 +22,12 @@ class Blackjack:
     SUITS   = ["♠", "♥", "♦", "♣"]
     RANKS   = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
     INITIAL_BALANCE = 1_000.00
-
     RED_SUITS = {"♥", "♦"}
+
+    CARD_W     = 58
+    CARD_H     = 82
+    ANIM_STEPS = 10
+    ANIM_MS    = 14
 
     def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
         self.root = root
@@ -213,23 +217,53 @@ class Blackjack:
     # ── Card rendering ───────────────────────────────────────
 
     def _card_widget(self, parent, card, hidden: bool = False) -> ctk.CTkFrame:
-        frame = ctk.CTkFrame(parent, fg_color="#FFFFFF", corner_radius=8, width=58, height=82)
+        frame = ctk.CTkFrame(parent, fg_color="#FFFFFF", corner_radius=8, width=self.CARD_W, height=self.CARD_H)
         frame.pack_propagate(False)
         frame.pack(side="left", padx=3)
-
         if hidden:
-            ctk.CTkLabel(
-                frame, text="🂠", font=("Arial", 38), text_color="#000080",
-            ).pack(expand=True)
+            ctk.CTkLabel(frame, text="🂠", font=("Arial", 38), text_color="#000080").pack(expand=True)
         else:
             rank, suit = card
             color = "#CC0000" if suit in self.RED_SUITS else "#000000"
-            ctk.CTkLabel(
-                frame, text=f"{rank}\n{suit}",
-                font=("Arial", 15, "bold"), text_color=color,
-            ).pack(expand=True)
-
+            ctk.CTkLabel(frame, text=f"{rank}\n{suit}", font=("Arial", 15, "bold"), text_color=color).pack(expand=True)
         return frame
+
+    def _animate_card_in(self, parent, card, hidden: bool = False, on_done=None) -> None:
+        frame = ctk.CTkFrame(parent, fg_color="#FFFFFF", corner_radius=8, width=0, height=self.CARD_H)
+        frame.pack_propagate(False)
+        frame.pack(side="left", padx=3)
+        if hidden:
+            ctk.CTkLabel(frame, text="🂠", font=("Arial", 38), text_color="#000080").pack(expand=True)
+        else:
+            rank, suit = card
+            color = "#CC0000" if suit in self.RED_SUITS else "#000000"
+            ctk.CTkLabel(frame, text=f"{rank}\n{suit}", font=("Arial", 15, "bold"), text_color=color).pack(expand=True)
+
+        def step(n):
+            frame.configure(width=int(self.CARD_W * n / self.ANIM_STEPS))
+            if n < self.ANIM_STEPS:
+                self.root.after(self.ANIM_MS, lambda: step(n + 1))
+            elif on_done:
+                on_done()
+        step(1)
+
+    def _deal_sequence(self, specs: list, on_complete=None) -> None:
+        def next_card(i):
+            if i >= len(specs):
+                if on_complete:
+                    on_complete()
+                return
+            parent, card, hidden = specs[i]
+            self._animate_card_in(parent, card, hidden, on_done=lambda: next_card(i + 1))
+        next_card(0)
+
+    def _update_score_labels(self, hide_dealer: bool = True) -> None:
+        if hide_dealer:
+            v = self._hand_value([self.dealer_hand[0]])
+            self.dealer_score_label.configure(text=f"Dealer: {v} + ?")
+        else:
+            self.dealer_score_label.configure(text=f"Dealer: {self._hand_value(self.dealer_hand)}")
+        self.player_score_label.configure(text=f"Sua mão: {self._hand_value(self.player_hand)}")
 
     def _render_hands(self, hide_dealer: bool = True) -> None:
         for widget in self.dealer_cards_frame.winfo_children():
@@ -331,25 +365,48 @@ class Blackjack:
         self.doubled_down = False
 
         self.balance_label.configure(text=self._balance_text())
-        self.result_label.configure(text=f"Aposta: R$ {self.current_bet:.2f} | Sua vez!", text_color="#FFFFFF")
+        self.result_label.configure(text=f"Aposta: R$ {self.current_bet:.2f} | Distribuindo...", text_color="#AAAAAA")
         self.result_frame.configure(border_width=0)
         self.deal_button.configure(state="disabled")
         self.bet_entry.configure(state="disabled")
-        self._set_action_buttons(True)
-        self._render_hands(hide_dealer=True)
+        self._set_action_buttons(False)
 
-        if self._is_blackjack(self.player_hand):
-            self._resolve(force_reveal=True)
+        for w in self.dealer_cards_frame.winfo_children(): w.destroy()
+        for w in self.player_cards_frame.winfo_children(): w.destroy()
+
+        specs = [
+            (self.player_cards_frame, self.player_hand[0], False),
+            (self.dealer_cards_frame, self.dealer_hand[0], False),
+            (self.player_cards_frame, self.player_hand[1], False),
+            (self.dealer_cards_frame, self.dealer_hand[1], True),
+        ]
+
+        def after_deal():
+            self._update_score_labels(hide_dealer=True)
+            if self._is_blackjack(self.player_hand):
+                self._resolve(force_reveal=True)
+            else:
+                self.result_label.configure(text=f"Aposta: R$ {self.current_bet:.2f} | Sua vez!", text_color="#FFFFFF")
+                self._set_action_buttons(True)
+
+        self._deal_sequence(specs, on_complete=after_deal)
 
     def hit(self) -> None:
         if not self.game_active:
             return
-        self.player_hand.append(self.deck.pop())
+        new_card = self.deck.pop()
+        self.player_hand.append(new_card)
+        self._set_action_buttons(False)
         self.double_button.configure(state="disabled")
-        self._render_hands(hide_dealer=True)
 
-        if self._hand_value(self.player_hand) > 21:
-            self._resolve(force_reveal=True)
+        def after_hit():
+            self._update_score_labels(hide_dealer=True)
+            if self._hand_value(self.player_hand) > 21:
+                self._resolve(force_reveal=True)
+            else:
+                self._set_action_buttons(True)
+
+        self._animate_card_in(self.player_cards_frame, new_card, on_done=after_hit)
 
     def stand(self) -> None:
         if not self.game_active:
@@ -368,14 +425,19 @@ class Blackjack:
         self.result_label.configure(
             text=f"Double Down! Aposta: R$ {self.current_bet:.2f}", text_color="#FFD700"
         )
-        self.player_hand.append(self.deck.pop())
-        self._render_hands(hide_dealer=True)
+        self._set_action_buttons(False)
+        new_card = self.deck.pop()
+        self.player_hand.append(new_card)
 
-        if self._hand_value(self.player_hand) > 21:
-            self._resolve(force_reveal=True)
-        else:
-            self._dealer_draw()
-            self._resolve(force_reveal=True)
+        def after_double():
+            self._update_score_labels(hide_dealer=True)
+            if self._hand_value(self.player_hand) > 21:
+                self._resolve(force_reveal=True)
+            else:
+                self._dealer_draw()
+                self._resolve(force_reveal=True)
+
+        self._animate_card_in(self.player_cards_frame, new_card, on_done=after_double)
 
     def _dealer_draw(self) -> None:
         while self._hand_value(self.dealer_hand) < 17:

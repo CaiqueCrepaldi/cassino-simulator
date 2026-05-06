@@ -23,6 +23,11 @@ class Baccarat:
     RED_SUITS = {"♥", "♦"}
     INITIAL_BALANCE = 1_000.00
 
+    CARD_W     = 52
+    CARD_H     = 76
+    ANIM_STEPS = 10
+    ANIM_MS    = 14
+
     def __init__(self, root: ctk.CTk, container: ctk.CTkFrame, back_callback) -> None:
         self.root = root
         self.container = container
@@ -211,29 +216,38 @@ class Baccarat:
 
     def _card_widget(self, parent: ctk.CTkFrame, card: tuple) -> ctk.CTkFrame:
         rank, suit = card
-        frame = ctk.CTkFrame(parent, fg_color="#FFFFFF", corner_radius=8, width=58, height=82)
+        frame = ctk.CTkFrame(parent, fg_color="#FFFFFF", corner_radius=8, width=self.CARD_W, height=self.CARD_H)
         frame.pack_propagate(False)
         frame.pack(side="left", padx=3)
         color = "#CC0000" if suit in self.RED_SUITS else "#000000"
-        ctk.CTkLabel(
-            frame, text=f"{rank}\n{suit}",
-            font=("Arial", 15, "bold"), text_color=color,
-        ).pack(expand=True)
+        ctk.CTkLabel(frame, text=f"{rank}\n{suit}", font=("Arial", 14, "bold"), text_color=color).pack(expand=True)
         return frame
 
-    def _render_hands(self, p_hand: list, b_hand: list) -> None:
-        for w in self.player_cards_frame.winfo_children():
-            w.destroy()
-        for w in self.banker_cards_frame.winfo_children():
-            w.destroy()
+    def _animate_card_in(self, parent: ctk.CTkFrame, card: tuple, on_done=None) -> None:
+        rank, suit = card
+        frame = ctk.CTkFrame(parent, fg_color="#FFFFFF", corner_radius=8, width=0, height=self.CARD_H)
+        frame.pack_propagate(False)
+        frame.pack(side="left", padx=3)
+        color = "#CC0000" if suit in self.RED_SUITS else "#000000"
+        ctk.CTkLabel(frame, text=f"{rank}\n{suit}", font=("Arial", 14, "bold"), text_color=color).pack(expand=True)
 
-        for card in p_hand:
-            self._card_widget(self.player_cards_frame, card)
-        for card in b_hand:
-            self._card_widget(self.banker_cards_frame, card)
+        def step(n):
+            frame.configure(width=int(self.CARD_W * n / self.ANIM_STEPS))
+            if n < self.ANIM_STEPS:
+                self.root.after(self.ANIM_MS, lambda: step(n + 1))
+            elif on_done:
+                on_done()
+        step(1)
 
-        self.player_score_label.configure(text=f"Pontos: {self._bac_value(p_hand)}")
-        self.banker_score_label.configure(text=f"Pontos: {self._bac_value(b_hand)}")
+    def _deal_sequence(self, specs: list, on_complete=None) -> None:
+        def next_card(i):
+            if i >= len(specs):
+                if on_complete:
+                    on_complete()
+                return
+            parent, card = specs[i]
+            self._animate_card_in(parent, card, on_done=lambda: next_card(i + 1))
+        next_card(0)
 
     # ── Helpers ──────────────────────────────────────────────
 
@@ -339,85 +353,88 @@ class Baccarat:
         self.deal_button.configure(state="disabled")
         self.bet_entry.configure(state="disabled")
         self.result_frame.configure(border_width=0)
+        self.result_label.configure(text="Distribuindo...", text_color="#AAAAAA")
 
+        # Pre-compute all cards before animating
         deck = self._new_deck()
         p_hand = [deck.pop(), deck.pop()]
         b_hand = [deck.pop(), deck.pop()]
 
         p_val = self._bac_value(p_hand)
         b_val = self._bac_value(b_hand)
-
         p3_rank: str | None = None
         player_drew = False
 
-        # Natural check: no more cards if either hand is 8 or 9
         if p_val < 8 and b_val < 8:
             if self._should_player_draw(p_val):
                 p3 = deck.pop()
                 p_hand.append(p3)
                 p3_rank = p3[0]
                 player_drew = True
-
-            p_val = self._bac_value(p_hand)
             b_val = self._bac_value(b_hand)
-
             if self._should_banker_draw(b_val, player_drew, p3_rank):
                 b_hand.append(deck.pop())
 
-        p_final = self._bac_value(p_hand)
-        b_final = self._bac_value(b_hand)
+        # Clear card areas
+        for w in self.player_cards_frame.winfo_children(): w.destroy()
+        for w in self.banker_cards_frame.winfo_children(): w.destroy()
 
-        self._render_hands(p_hand, b_hand)
-        self.rounds += 1
+        # Build interleaved animation: p1, b1, p2, b2, (p3), (b3)
+        specs: list[tuple] = []
+        for i in range(max(len(p_hand), len(b_hand))):
+            if i < len(p_hand):
+                specs.append((self.player_cards_frame, p_hand[i]))
+            if i < len(b_hand):
+                specs.append((self.banker_cards_frame, b_hand[i]))
 
-        # Determine winner
-        if p_final > b_final:
-            winner = "player"
-        elif b_final > p_final:
-            winner = "banker"
-        else:
-            winner = "tie"
+        def show_result():
+            p_final = self._bac_value(p_hand)
+            b_final = self._bac_value(b_hand)
+            self.player_score_label.configure(text=f"Pontos: {p_final}")
+            self.banker_score_label.configure(text=f"Pontos: {b_final}")
+            self.rounds += 1
 
-        # Calculate prize
-        if self.chosen_side == winner:
-            if winner == "player":
-                prize = self.current_bet * 2
-                msg = f"🟦 JOGADOR venceu {p_final} × {b_final}!\n💰 Ganhou R$ {self.current_bet:.2f}!"
-                color = "#4488FF"
-            elif winner == "banker":
-                net = round(self.current_bet * 0.95, 2)
-                prize = self.current_bet + net
-                msg = f"🟥 BANCA venceu {b_final} × {p_final}!\n💰 Ganhou R$ {net:.2f} (após 5% comissão)!"
+            winner = "player" if p_final > b_final else ("banker" if b_final > p_final else "tie")
+
+            if self.chosen_side == winner:
+                if winner == "player":
+                    prize = self.current_bet * 2
+                    msg = f"🟦 JOGADOR venceu {p_final} × {b_final}!\n💰 Ganhou R$ {self.current_bet:.2f}!"
+                    color = "#4488FF"
+                elif winner == "banker":
+                    net = round(self.current_bet * 0.95, 2)
+                    prize = self.current_bet + net
+                    msg = f"🟥 BANCA venceu {b_final} × {p_final}!\n💰 Ganhou R$ {net:.2f} (após 5% comissão)!"
+                    color = "#FF4444"
+                else:
+                    prize = self.current_bet * 9
+                    msg = f"🟨 EMPATE! {p_final} × {b_final}!\n💰 Ganhou R$ {self.current_bet * 8:.2f}! (8×)"
+                    color = "#FFD700"
+                self.wins += 1
+                self.balance += prize
+            else:
+                self.balance -= self.current_bet
+                winner_names = {"player": "Jogador", "banker": "Banca", "tie": "Empate"}
+                msg = (
+                    f"❌ {winner_names[winner]} venceu ({p_final} × {b_final})!\n"
+                    f"💸 Perdeu R$ {self.current_bet:.2f}"
+                )
                 color = "#FF4444"
-            else:  # tie
-                prize = self.current_bet * 9
-                msg = f"🟨 EMPATE! {p_final} × {b_final}!\n💰 Ganhou R$ {self.current_bet * 8:.2f}! (8×)"
-                color = "#FFD700"
-            self.wins += 1
-            self.balance += prize
-        else:
-            prize = 0
-            self.balance -= self.current_bet
-            winner_names = {"player": "Jogador", "banker": "Banca", "tie": "Empate"}
-            msg = (
-                f"❌ {winner_names[winner]} venceu ({p_final} × {b_final})!\n"
-                f"💸 Perdeu R$ {self.current_bet:.2f}"
-            )
-            color = "#FF4444"
 
-        self.balance_label.configure(text=self._balance_text())
-        self.result_label.configure(text=msg, text_color=color)
-        self.result_frame.configure(border_color=color, border_width=3)
-        self.stats_label.configure(text=self._stats_text())
+            self.balance_label.configure(text=self._balance_text())
+            self.result_label.configure(text=msg, text_color=color)
+            self.result_frame.configure(border_color=color, border_width=3)
+            self.stats_label.configure(text=self._stats_text())
+            self.game_active = False
 
-        self.game_active = False
+            if self.balance > 0:
+                self.deal_button.configure(state="normal")
+                self.bet_entry.configure(state="normal")
+                self.bet_entry.delete(0, "end")
+            else:
+                self.result_label.configure(text="💀 BANCA ZERADA! Clique em Novo Jogo.", text_color="#FF0000")
 
-        if self.balance > 0:
-            self.deal_button.configure(state="normal")
-            self.bet_entry.configure(state="normal")
-            self.bet_entry.delete(0, "end")
-        else:
-            self.result_label.configure(text="💀 BANCA ZERADA! Clique em Novo Jogo.", text_color="#FF0000")
+        self._deal_sequence(specs, on_complete=show_result)
 
     def reset(self) -> None:
         self.balance = self.INITIAL_BALANCE
