@@ -28,7 +28,10 @@ class SlotMachine:
         self.root = root
         self.root.title("🎰 Slot Machine")
         self.root.geometry("600x1150")
-        self.root.resizable(False, False)
+        self.root.resizable(True, True)
+        self.root.minsize(600, 800)
+        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
+        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
 
         # State
         self.balance: float = self.INITIAL_BALANCE

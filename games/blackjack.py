@@ -30,7 +30,10 @@ class Blackjack:
         self.root = root
         self.root.title("🃏 Blackjack")
         self.root.geometry("620x860")
-        self.root.resizable(False, False)
+        self.root.resizable(True, True)
+        self.root.minsize(620, 700)
+        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
+        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
 
         # State
         self.balance: float     = self.INITIAL_BALANCE

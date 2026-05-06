@@ -34,7 +34,10 @@ class AviatorGame:
         self.root = root
         self.root.title("✈️ Aviator")
         self.root.geometry("580x820")
-        self.root.resizable(False, False)
+        self.root.resizable(True, True)
+        self.root.minsize(580, 720)
+        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
+        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
 
         # State
         self.balance: float     = self.INITIAL_BALANCE
@@ -86,10 +89,9 @@ class AviatorGame:
 
         self.canvas = tk.Canvas(
             canvas_frame,
-            width=self.CANVAS_W, height=self.CANVAS_H,
             bg="#0a0a1a", highlightthickness=0,
         )
-        self.canvas.pack(padx=5, pady=5)
+        self.canvas.pack(padx=5, pady=5, fill="both", expand=True)
 
         self.mult_text = self.canvas.create_text(
             self.CANVAS_W // 2, self.CANVAS_H // 2,
@@ -100,10 +102,7 @@ class AviatorGame:
             text="✈️", font=("Arial", 32), fill="#FFFFFF",
         )
 
-        for y in range(0, self.CANVAS_H, 40):
-            self.canvas.create_line(0, y, self.CANVAS_W, y, fill="#111133", width=1)
-        for x in range(0, self.CANVAS_W, 60):
-            self.canvas.create_line(x, 0, x, self.CANVAS_H, fill="#111133", width=1)
+        self.canvas.bind("<Configure>", self._on_canvas_resize)
 
         # History bar
         hist_frame = ctk.CTkFrame(main, fg_color="#0d0d0d", corner_radius=8)
@@ -219,6 +218,20 @@ class AviatorGame:
         self.stats_label.pack(pady=(0, 10))
 
     # ── Helpers ──────────────────────────────────────────────
+
+    def _on_canvas_resize(self, event) -> None:
+        self.CANVAS_W = event.width
+        self.CANVAS_H = event.height
+        self.canvas.delete("grid")
+        for y in range(0, self.CANVAS_H, 40):
+            self.canvas.create_line(0, y, self.CANVAS_W, y, fill="#111133", width=1, tags="grid")
+        for x in range(0, self.CANVAS_W, 60):
+            self.canvas.create_line(x, 0, x, self.CANVAS_H, fill="#111133", width=1, tags="grid")
+        self.canvas.coords(self.mult_text, self.CANVAS_W // 2, self.CANVAS_H // 2)
+        if not self.running:
+            self.canvas.coords(self.plane_obj, 60, self.CANVAS_H - 40)
+        self.canvas.tag_raise(self.mult_text)
+        self.canvas.tag_raise(self.plane_obj)
 
     def _balance_text(self) -> str:
         return f"💰 Banca: R$ {self.balance:.2f}"

@@ -42,7 +42,10 @@ class DoubleGame:
         self.root = root
         self.root.title("🎡 Double")
         self.root.geometry("560x860")
-        self.root.resizable(False, False)
+        self.root.resizable(True, True)
+        self.root.minsize(560, 720)
+        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
+        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
 
         # State
         self.balance: float      = self.INITIAL_BALANCE
@@ -91,17 +94,11 @@ class DoubleGame:
         canvas_bg.pack(padx=20, pady=12, fill="x")
 
         self.canvas = tk.Canvas(
-            canvas_bg, width=500, height=110,
+            canvas_bg,
             bg="#1a1a1a", highlightthickness=0,
         )
-        self.canvas.pack(pady=10, padx=10)
-        self._draw_wheel()
-
-        # Golden pointer arrow at top-centre
-        self.canvas.create_polygon(
-            250, 8, 244, 20, 256, 20,
-            fill="#FFD700", outline="#FFD700",
-        )
+        self.canvas.pack(pady=10, padx=10, fill="both", expand=True)
+        self.canvas.bind("<Configure>", self._on_canvas_resize)
 
         # History bar
         hist_frame = ctk.CTkFrame(main, fg_color="#111111", corner_radius=8)
@@ -213,6 +210,11 @@ class DoubleGame:
 
     # ── Wheel rendering ──────────────────────────────────────
 
+    def _on_canvas_resize(self, event) -> None:
+        self._canvas_w = max(event.width, 100)
+        self._canvas_h = max(event.height, 60)
+        self._draw_wheel(self._wheel_offset)
+
     def _draw_wheel(self, offset: int = 0) -> None:
         """
         Render the 14 coloured segments on the canvas.
@@ -221,16 +223,20 @@ class DoubleGame:
         SEGMENTS[offset % 14].  Each column index maps to:
             real_index = (offset - 7 + i) % len(SEGMENTS)
         """
+        w = getattr(self, "_canvas_w", 500)
+        h = getattr(self, "_canvas_h", 110)
         self.canvas.delete("wheel")
         total  = len(self.SEGMENTS)
-        seg_w  = 500 // 14   # ≈ 35 px
+        seg_w  = w // 14
+        mid    = w // 2
+        y1     = int(h * 0.22)
+        y2     = int(h * 0.88)
 
         for i in range(16):  # one extra column on each side to avoid gaps
             real_idx = (offset - 7 + i) % total
             color    = self.SEGMENTS[real_idx]
             x1 = i * seg_w - (seg_w // 2)
             x2 = x1 + seg_w - 2
-            y1, y2 = 22, 90
 
             self.canvas.create_rectangle(
                 x1, y1, x2, y2,
@@ -242,10 +248,15 @@ class DoubleGame:
                 fill=self.TEXT_COLOR[color], tags="wheel",
             )
 
+        # Golden pointer arrow at top-centre
+        self.canvas.create_polygon(
+            mid, 4, mid - 8, 18, mid + 8, 18,
+            fill="#FFD700", outline="#FFD700", tags="wheel",
+        )
+
         # Golden border on the central segment (the result indicator)
-        mid = 250
         self.canvas.create_rectangle(
-            mid - seg_w // 2, 20, mid + seg_w // 2, 90,
+            mid - seg_w // 2, y1 - 2, mid + seg_w // 2, y2 + 2,
             outline="#FFD700", width=3, tags="wheel",
         )
 

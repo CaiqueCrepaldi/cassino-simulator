@@ -67,7 +67,8 @@ class MenuPrincipal:
         self.root = root
         self.root.title("🎰 Cassino Simulator – Menu Principal")
         self.root.geometry("520x920")
-        self.root.resizable(False, False)
+        self.root.bind("<F11>", lambda _: self.root.attributes("-fullscreen", not self.root.attributes("-fullscreen")))
+        self.root.bind("<Escape>", lambda _: self.root.attributes("-fullscreen", False))
         self._build_ui()
 
     # ── UI ───────────────────────────────────────────────────
